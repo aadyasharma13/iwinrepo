@@ -35,7 +35,7 @@ export default function Navbar() {
               <span className="ml-[-10] text-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent tracking-tight">
                 I-Win
               </span>
-              <span className="ml-[-10] text-xs text-gray-500 -mt-1">Healthcare Community</span>
+              <span className="ml-[-10] text-xs text-gray-500 -mt-1">Healing Through Hope</span>
             </div>
           </Link>
 
@@ -43,34 +43,48 @@ export default function Navbar() {
           <div className="hidden md:flex items-center space-x-8">
             {/* Community Link - Always visible */}
             <Link 
-    href="/community" 
-    className="text-gray-600 hover:text-emerald-600 font-medium transition-colors duration-200 relative group"
-  >
-    Community
-    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-500 group-hover:w-full transition-all duration-300"></span>
-  </Link>
+              href="/community" 
+              className="text-gray-600 hover:text-emerald-600 font-medium transition-colors duration-200 relative group"
+            >
+              Community
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-500 group-hover:w-full transition-all duration-300"></span>
+            </Link>
 
-  {/* Profile Link - Only show when logged in */}
-  {user && (
-    <Link 
-      href="/profile" 
-      className="text-gray-600 hover:text-emerald-600 font-medium transition-colors duration-200 relative group"
-    >
-      Profile
-      <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-500 group-hover:w-full transition-all duration-300"></span>
-    </Link>
-  )}
+            {/* AI Assistant Link - Only show when logged in */}
+            {user && (
+              <Link 
+                href="/chatbot" 
+                className="text-gray-600 hover:text-emerald-600 font-medium transition-colors duration-200 relative group flex items-center space-x-1"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                <span>AI Assistant</span>
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-500 group-hover:w-full transition-all duration-300"></span>
+              </Link>
+            )}
 
-  {/* Admin Link - Only show for admin users */}
-  {user?.role === 'admin' && (
-    <Link 
-      href="/admin" 
-      className="text-gray-600 hover:text-emerald-600 font-medium transition-colors duration-200 relative group"
-    >
-      Admin
-      <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-500 group-hover:w-full transition-all duration-300"></span>
-    </Link>
-  )}
+            {/* Profile Link - Only show when logged in */}
+            {user && (
+              <Link 
+                href="/profile" 
+                className="text-gray-600 hover:text-emerald-600 font-medium transition-colors duration-200 relative group"
+              >
+                Profile
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-500 group-hover:w-full transition-all duration-300"></span>
+              </Link>
+            )}
+
+            {/* Admin Link - Only show for admin users */}
+            {user?.role === 'admin' && (
+              <Link 
+                href="/admin" 
+                className="text-gray-600 hover:text-emerald-600 font-medium transition-colors duration-200 relative group"
+              >
+                Admin
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-500 group-hover:w-full transition-all duration-300"></span>
+              </Link>
+            )}
 
             {/* Auth Section */}
             {user ? (
@@ -139,18 +153,29 @@ export default function Navbar() {
                       <span className="text-sm">View Profile</span>
                     </Link>
 
+                    <Link 
+                      href="/chatbot"
+                      className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                      <span className="text-sm">AI Assistant</span>
+                    </Link>
+
                     {user.role === 'admin' && (
-  <Link 
-    href="/admin"
-    className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
-    onClick={() => setIsProfileMenuOpen(false)}
-  >
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-    </svg>
-    <span className="text-sm">Admin Dashboard</span>
-  </Link>
-)}
+                      <Link 
+                        href="/admin"
+                        className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
+                        onClick={() => setIsProfileMenuOpen(false)}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2-2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        <span className="text-sm">Admin Dashboard</span>
+                      </Link>
+                    )}
                     
                     <div className="border-t border-gray-100 mt-2">
                       <button 
@@ -253,6 +278,17 @@ export default function Navbar() {
                       </svg>
                       <span>Community</span>
                     </Link>
+
+                    <Link 
+                      href="/chatbot" 
+                      className="flex items-center space-x-3 px-3 py-3 text-gray-700 hover:text-emerald-600 font-medium transition-colors rounded-lg hover:bg-emerald-50"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                      <span>AI Assistant</span>
+                    </Link>
                     
                     <Link 
                       href="/profile" 
@@ -266,17 +302,17 @@ export default function Navbar() {
                     </Link>
 
                     {user.role === 'admin' && (
-  <Link 
-    href="/admin" 
-    className="flex items-center space-x-3 px-3 py-3 text-gray-700 hover:text-emerald-600 font-medium transition-colors rounded-lg hover:bg-emerald-50"
-    onClick={() => setIsMenuOpen(false)}
-  >
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-    </svg>
-    <span>Admin</span>
-  </Link>
-)}
+                      <Link 
+                        href="/admin" 
+                        className="flex items-center space-x-3 px-3 py-3 text-gray-700 hover:text-emerald-600 font-medium transition-colors rounded-lg hover:bg-emerald-50"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2-2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        <span>Admin</span>
+                      </Link>
+                    )}
                     
                     {/* Divider */}
                     <div className="border-t border-gray-200 my-2"></div>

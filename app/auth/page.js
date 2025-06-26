@@ -25,9 +25,9 @@ export default function AuthPage() {
           </h1>
           <p className="text-gray-600 leading-relaxed">
             {activeTab === 'signin' 
-              ? 'Continue your healthcare journey with our community'
+              ? 'Welcome back. Your story-and your support system \— are right here.'
               : activeTab === 'signup'
-              ? 'Start your journey with our healthcare community'
+              ? 'You\'re not alone anymore \— welcome to a community that truly gets it.'
               : 'Enter your email to reset your password'
             }
           </p>

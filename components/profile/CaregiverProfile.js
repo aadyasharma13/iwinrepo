@@ -32,6 +32,95 @@ export default function CaregiverProfile({ userData, onUpdate }) {
     'Childcare Support', 'Household Management', 'Communication Coordination', 'Other'
   ];
 
+  // Same extensive condition list as CaregiverForm
+  const conditionOptions = [
+    // Cancer Types
+    'Breast Cancer', 'Lung Cancer', 'Prostate Cancer', 'Colorectal Cancer', 'Skin Cancer (Melanoma)', 
+    'Liver Cancer', 'Pancreatic Cancer', 'Kidney Cancer', 'Bladder Cancer', 'Brain Cancer',
+    'Ovarian Cancer', 'Cervical Cancer', 'Endometrial Cancer', 'Stomach Cancer', 'Esophageal Cancer',
+    'Thyroid Cancer', 'Blood Cancer (Leukemia)', 'Lymphoma', 'Multiple Myeloma', 'Bone Cancer',
+    
+    // Neurological & Age-related (common in caregiving)
+    'Alzheimer\'s Disease', 'Dementia', 'Parkinson\'s Disease', 'Multiple Sclerosis', 'Stroke',
+    'Traumatic Brain Injury', 'Spinal Cord Injury', 'Cerebral Palsy', 'Epilepsy',
+    'Huntington\'s Disease', 'ALS (Lou Gehrig\'s Disease)', 'Migraine', 'Neuropathy',
+    
+    // Chronic Conditions
+    'Type 1 Diabetes', 'Type 2 Diabetes', 'Heart Disease', 'COPD', 'Chronic Kidney Disease',
+    'Liver Disease', 'Arthritis', 'Fibromyalgia', 'Chronic Pain', 'Lupus',
+    'High Blood Pressure', 'Heart Failure', 'Asthma', 'Osteoporosis',
+    
+    // Mental Health (common in caregiving)
+    'Depression', 'Anxiety', 'Bipolar Disorder', 'Schizophrenia', 'PTSD', 'Autism Spectrum Disorder',
+    'ADHD', 'Eating Disorders', 'Substance Abuse', 'Dementia-related Behavioral Issues',
+    'OCD', 'Panic Disorder', 'Social Anxiety',
+    
+    // Physical Disabilities
+    'Mobility Impairment', 'Vision Loss/Blindness', 'Hearing Loss/Deafness', 'Amputation',
+    'Muscular Dystrophy', 'Paralysis', 'Chronic Fatigue Syndrome', 'Fractures',
+    'Joint Replacement Recovery', 'Back Pain', 'Spinal Disorders',
+    
+    // Age-related Conditions (common in elderly care)
+    'Frailty', 'Falls Risk', 'Incontinence', 'Age-related Cognitive Decline',
+    'Macular Degeneration', 'Cataracts', 'Hearing Loss', 'Balance Disorders',
+    
+    // Developmental Disabilities
+    'Down Syndrome', 'Intellectual Disability', 'Developmental Delays', 'Cerebral Palsy',
+    'Autism', 'Learning Disabilities', 'Fetal Alcohol Syndrome',
+    
+    // Terminal/End-of-life Conditions
+    'Terminal Cancer', 'End-stage Organ Disease', 'Hospice Care', 'Palliative Care',
+    'Advanced Dementia', 'End-stage COPD', 'End-stage Heart Disease',
+    
+    // Recovery/Rehabilitation
+    'Post-surgery Recovery', 'Accident Recovery', 'Stroke Recovery', 'Heart Attack Recovery',
+    'Rehabilitation', 'Physical Therapy', 'Occupational Therapy',
+    
+    // Child-specific (pediatric caregiving)
+    'Pediatric Cancer', 'Birth Defects', 'Childhood Disabilities', 'Special Needs',
+    'Premature Birth Complications', 'Genetic Disorders', 'Cystic Fibrosis',
+    
+    // Autoimmune & Chronic Conditions
+    'Rheumatoid Arthritis', 'Crohn\'s Disease', 'Ulcerative Colitis', 'Celiac Disease',
+    'Psoriasis', 'Sjogren\'s Syndrome', 'Scleroderma', 'Thyroid Disease',
+    
+    // Cardiovascular
+    'Heart Attack', 'Stroke', 'Arrhythmia', 'Coronary Artery Disease', 'Heart Valve Disease',
+    'Cardiomyopathy', 'Peripheral Artery Disease', 'Deep Vein Thrombosis',
+    
+    // Respiratory
+    'Pulmonary Fibrosis', 'Sleep Apnea', 'Pneumonia', 'Tuberculosis', 'Bronchitis',
+    'Emphysema', 'Lung Disease',
+    
+    // Kidney & Urological
+    'Kidney Stones', 'Dialysis', 'Kidney Transplant', 'Bladder Disorders',
+    'Prostate Problems', 'Urinary Tract Infections',
+    
+    // Gastrointestinal
+    'IBS (Irritable Bowel Syndrome)', 'GERD', 'Peptic Ulcer', 'Gallbladder Disease',
+    'Hepatitis', 'Cirrhosis', 'Pancreatitis', 'Diverticulitis',
+    
+    // Blood Disorders
+    'Anemia', 'Hemophilia', 'Sickle Cell Disease', 'Thalassemia', 'Blood Clotting Disorders',
+    
+    // Infectious Diseases
+    'HIV/AIDS', 'Hepatitis B', 'Hepatitis C', 'COVID-19', 'Malaria', 'Dengue',
+    
+    // Women's Health
+    'Endometriosis', 'Fibroids', 'Pregnancy Complications', 'Menopause', 'Infertility',
+    'Breast Disease', 'PCOS',
+    
+    // Men's Health
+    'Erectile Dysfunction', 'Low Testosterone', 'Benign Prostatic Hyperplasia',
+    
+    // Eye & Skin Conditions
+    'Glaucoma', 'Diabetic Retinopathy', 'Eczema', 'Dermatitis', 'Skin Allergies',
+    
+    // Other
+    'Multiple Conditions', 'Rare Disease', 'Temporary Disability', 'Obesity',
+    'Malnutrition', 'Addiction Recovery', 'Other'
+  ];
+
   const challengeOptions = [
     'Physical Exhaustion', 'Emotional Stress', 'Financial Strain', 'Time Management',
     'Lack of Support', 'Medical Complexity', 'Behavioral Issues', 'Sleep Deprivation',
@@ -289,18 +378,24 @@ export default function CaregiverProfile({ userData, onUpdate }) {
               </div>
             </div>
 
-            {/* Care Recipient Condition */}
+            {/* Care Recipient Condition - Now a dropdown */}
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-gray-700">
-                Care Recipient&apos;s Condition/Diagnosis
+                Care Recipient&apos;s Condition/Diagnosis *
               </label>
-              <input
-                type="text"
+              <select
                 value={formData.careRecipientCondition}
                 onChange={(e) => setFormData({ ...formData, careRecipientCondition: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500"
-                placeholder="e.g., Alzheimer's Disease, Cancer, Stroke Recovery"
-              />
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+              >
+                <option value="">Select care recipient&apos;s condition</option>
+                {conditionOptions.map((condition) => (
+                  <option key={condition} value={condition}>
+                    {condition}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 ml-1">Select the primary condition you&apos;re providing care for</p>
             </div>
 
             {/* Caregiving Location & Hours */}

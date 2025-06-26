@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { Country, State, City } from 'country-state-city';
 
 export default function CaregiverForm({ onSubmit }) {
   const [formData, setFormData] = useState({
@@ -10,7 +11,11 @@ export default function CaregiverForm({ onSubmit }) {
       startDate: '',
       endDate: '',
       isOngoing: true
-    }
+    },
+    // Add location fields
+    country: '',
+    state: '',
+    city: ''
   });
 
   const relationshipOptions = [
@@ -38,6 +43,100 @@ export default function CaregiverForm({ onSubmit }) {
     'Childcare Support',
     'Other'
   ];
+
+  // Same extensive condition list as PatientForm but focused on caregiving scenarios
+  const conditionOptions = [
+    // Cancer Types
+    'Breast Cancer', 'Lung Cancer', 'Prostate Cancer', 'Colorectal Cancer', 'Skin Cancer (Melanoma)', 
+    'Liver Cancer', 'Pancreatic Cancer', 'Kidney Cancer', 'Bladder Cancer', 'Brain Cancer',
+    'Ovarian Cancer', 'Cervical Cancer', 'Endometrial Cancer', 'Stomach Cancer', 'Esophageal Cancer',
+    'Thyroid Cancer', 'Blood Cancer (Leukemia)', 'Lymphoma', 'Multiple Myeloma', 'Bone Cancer',
+    
+    // Neurological & Age-related (common in caregiving)
+    'Alzheimer\'s Disease', 'Dementia', 'Parkinson\'s Disease', 'Multiple Sclerosis', 'Stroke',
+    'Traumatic Brain Injury', 'Spinal Cord Injury', 'Cerebral Palsy', 'Epilepsy',
+    'Huntington\'s Disease', 'ALS (Lou Gehrig\'s Disease)', 'Migraine', 'Neuropathy',
+    
+    // Chronic Conditions
+    'Type 1 Diabetes', 'Type 2 Diabetes', 'Heart Disease', 'COPD', 'Chronic Kidney Disease',
+    'Liver Disease', 'Arthritis', 'Fibromyalgia', 'Chronic Pain', 'Lupus',
+    'High Blood Pressure', 'Heart Failure', 'Asthma', 'Osteoporosis',
+    
+    // Mental Health (common in caregiving)
+    'Depression', 'Anxiety', 'Bipolar Disorder', 'Schizophrenia', 'PTSD', 'Autism Spectrum Disorder',
+    'ADHD', 'Eating Disorders', 'Substance Abuse', 'Dementia-related Behavioral Issues',
+    'OCD', 'Panic Disorder', 'Social Anxiety',
+    
+    // Physical Disabilities
+    'Mobility Impairment', 'Vision Loss/Blindness', 'Hearing Loss/Deafness', 'Amputation',
+    'Muscular Dystrophy', 'Paralysis', 'Chronic Fatigue Syndrome', 'Fractures',
+    'Joint Replacement Recovery', 'Back Pain', 'Spinal Disorders',
+    
+    // Age-related Conditions (common in elderly care)
+    'Frailty', 'Falls Risk', 'Incontinence', 'Age-related Cognitive Decline',
+    'Macular Degeneration', 'Cataracts', 'Hearing Loss', 'Balance Disorders',
+    
+    // Developmental Disabilities
+    'Down Syndrome', 'Intellectual Disability', 'Developmental Delays', 'Cerebral Palsy',
+    'Autism', 'Learning Disabilities', 'Fetal Alcohol Syndrome',
+    
+    // Terminal/End-of-life Conditions
+    'Terminal Cancer', 'End-stage Organ Disease', 'Hospice Care', 'Palliative Care',
+    'Advanced Dementia', 'End-stage COPD', 'End-stage Heart Disease',
+    
+    // Recovery/Rehabilitation
+    'Post-surgery Recovery', 'Accident Recovery', 'Stroke Recovery', 'Heart Attack Recovery',
+    'Rehabilitation', 'Physical Therapy', 'Occupational Therapy',
+    
+    // Child-specific (pediatric caregiving)
+    'Pediatric Cancer', 'Birth Defects', 'Childhood Disabilities', 'Special Needs',
+    'Premature Birth Complications', 'Genetic Disorders', 'Cystic Fibrosis',
+    
+    // Autoimmune & Chronic Conditions
+    'Rheumatoid Arthritis', 'Crohn\'s Disease', 'Ulcerative Colitis', 'Celiac Disease',
+    'Psoriasis', 'Sjogren\'s Syndrome', 'Scleroderma', 'Thyroid Disease',
+    
+    // Cardiovascular
+    'Heart Attack', 'Stroke', 'Arrhythmia', 'Coronary Artery Disease', 'Heart Valve Disease',
+    'Cardiomyopathy', 'Peripheral Artery Disease', 'Deep Vein Thrombosis',
+    
+    // Respiratory
+    'Pulmonary Fibrosis', 'Sleep Apnea', 'Pneumonia', 'Tuberculosis', 'Bronchitis',
+    'Emphysema', 'Lung Disease',
+    
+    // Kidney & Urological
+    'Kidney Stones', 'Dialysis', 'Kidney Transplant', 'Bladder Disorders',
+    'Prostate Problems', 'Urinary Tract Infections',
+    
+    // Gastrointestinal
+    'IBS (Irritable Bowel Syndrome)', 'GERD', 'Peptic Ulcer', 'Gallbladder Disease',
+    'Hepatitis', 'Cirrhosis', 'Pancreatitis', 'Diverticulitis',
+    
+    // Blood Disorders
+    'Anemia', 'Hemophilia', 'Sickle Cell Disease', 'Thalassemia', 'Blood Clotting Disorders',
+    
+    // Infectious Diseases
+    'HIV/AIDS', 'Hepatitis B', 'Hepatitis C', 'COVID-19', 'Malaria', 'Dengue',
+    
+    // Women's Health
+    'Endometriosis', 'Fibroids', 'Pregnancy Complications', 'Menopause', 'Infertility',
+    'Breast Disease', 'PCOS',
+    
+    // Men's Health
+    'Erectile Dysfunction', 'Low Testosterone', 'Benign Prostatic Hyperplasia',
+    
+    // Eye & Skin Conditions
+    'Glaucoma', 'Diabetic Retinopathy', 'Eczema', 'Dermatitis', 'Skin Allergies',
+    
+    // Other
+    'Multiple Conditions', 'Rare Disease', 'Temporary Disability', 'Obesity',
+    'Malnutrition', 'Addiction Recovery', 'Other'
+  ];
+
+  // Get location data
+  const countries = Country.getAllCountries();
+  const states = formData.country ? State.getStatesOfCountry(formData.country) : [];
+  const cities = formData.state ? City.getCitiesOfState(formData.country, formData.state) : [];
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -67,6 +166,21 @@ export default function CaregiverForm({ onSubmit }) {
         ...formData.caregivingPeriod,
         [field]: value
       }
+    });
+  };
+
+  const handleLocationChange = (field, value) => {
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      
+      if (field === 'country') {
+        updated.state = '';
+        updated.city = '';
+      } else if (field === 'state') {
+        updated.city = '';
+      }
+      
+      return updated;
     });
   };
 
@@ -108,27 +222,26 @@ export default function CaregiverForm({ onSubmit }) {
           </div>
         </div>
 
-        {/* Care Recipient Condition */}
+        {/* Care Recipient Condition - Now a dropdown */}
         <div className="space-y-2">
           <label className="block text-sm font-semibold text-gray-700">
             Care Recipient&apos;s Condition/Diagnosis *
           </label>
-          <div className="relative">
-            <input
-              type="text"
-              name="careRecipientCondition"
-              value={formData.careRecipientCondition}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-4 pl-12 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all duration-200 text-gray-900 placeholder-gray-500"
-              placeholder="e.g., Alzheimer's, Cancer, Stroke Recovery"
-            />
-            <div className="absolute left-4 top-1/2 -translate-y-1/2">
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-          </div>
+          <select
+            name="careRecipientCondition"
+            value={formData.careRecipientCondition}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all duration-200 text-gray-900"
+          >
+            <option value="">Select care recipient&apos;s condition</option>
+            {conditionOptions.map((condition) => (
+              <option key={condition} value={condition}>
+                {condition}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-gray-500 ml-1">Select the primary condition you&apos;re providing care for</p>
         </div>
 
         {/* Caregiver Roles */}
@@ -208,6 +321,67 @@ export default function CaregiverForm({ onSubmit }) {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Location Section */}
+        <div className="space-y-4 bg-blue-50 p-6 rounded-2xl border border-blue-200">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Location *</h3>
+          
+          {/* Country */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-gray-700">Country *</label>
+            <select
+              value={formData.country}
+              onChange={(e) => handleLocationChange('country', e.target.value)}
+              required
+              className="w-full px-4 py-4 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900"
+            >
+              <option value="">Select your country</option>
+              {countries.map((country) => (
+                <option key={country.isoCode} value={country.isoCode}>
+                  {country.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* State */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-gray-700">State/Province *</label>
+            <select
+              value={formData.state}
+              onChange={(e) => handleLocationChange('state', e.target.value)}
+              required
+              disabled={!formData.country}
+              className="w-full px-4 py-4 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+            >
+              <option value="">Select your state</option>
+              {states.map((state) => (
+                <option key={state.isoCode} value={state.isoCode}>
+                  {state.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* City */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-gray-700">City *</label>
+            <select
+              value={formData.city}
+              onChange={(e) => handleLocationChange('city', e.target.value)}
+              required
+              disabled={!formData.state}
+              className="w-full px-4 py-4 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+            >
+              <option value="">Select your city</option>
+              {cities.map((city) => (
+                <option key={city.name} value={city.name}>
+                  {city.name}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 

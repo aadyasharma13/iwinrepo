@@ -1,9 +1,10 @@
 'use client';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { Country, State, City } from 'country-state-city';
 
 export default function MedicalProfessionalForm({ onSubmit }) {
-  const { uploadFile } = useAuth();
+  const { uploadFile, deleteFile } = useAuth();
   const [formData, setFormData] = useState({
     specialization: '',
     yearsOfExperience: '',
@@ -13,6 +14,11 @@ export default function MedicalProfessionalForm({ onSubmit }) {
     degree: '',
     graduationYear: '',
     additionalCertifications: [],
+    
+    // Add location fields
+    country: '',
+    state: '',
+    city: '',
     
     // Document URLs (not file objects)
     documents: {
@@ -35,63 +41,168 @@ export default function MedicalProfessionalForm({ onSubmit }) {
   const [isUploading, setIsUploading] = useState(false);
   const [verificationStep, setVerificationStep] = useState(1);
 
+  // Comprehensive medical specialization list
   const specializationOptions = [
-    'General Medicine',
-    'Cardiology',
-    'Oncology',
-    'Neurology',
-    'Orthopedics',
-    'Pediatrics',
-    'Psychiatry',
-    'Dermatology',
-    'Radiology',
-    'Anesthesiology',
-    'Emergency Medicine',
-    'Internal Medicine',
-    'Surgery',
-    'Obstetrics & Gynecology',
-    'Ophthalmology',
-    'ENT (Otolaryngology)',
-    'Urology',
-    'Gastroenterology',
-    'Endocrinology',
-    'Pulmonology',
-    'Nephrology',
-    'Rheumatology',
-    'Infectious Diseases',
-    'Pathology',
-    'Physical Medicine & Rehabilitation',
-    'Nursing',
-    'Pharmacy',
-    'Physiotherapy',
-    'Psychology/Counseling',
-    'Nutrition/Dietetics',
-    'Medical Research',
-    'Healthcare Administration',
+    // Primary Care & General Medicine
+    'General Medicine', 'Family Medicine', 'Internal Medicine', 'General Practice',
+    
+    // Surgical Specialties
+    'General Surgery', 'Orthopedic Surgery', 'Neurosurgery', 'Cardiovascular Surgery',
+    'Plastic Surgery', 'Pediatric Surgery', 'Urological Surgery', 'Thoracic Surgery',
+    'Vascular Surgery', 'Trauma Surgery', 'Transplant Surgery',
+    
+    // Medical Specialties
+    'Cardiology', 'Interventional Cardiology', 'Electrophysiology',
+    'Oncology', 'Medical Oncology', 'Radiation Oncology', 'Hematology',
+    'Neurology', 'Stroke Medicine', 'Epileptology', 'Movement Disorders',
+    'Gastroenterology', 'Hepatology', 'Pulmonology', 'Critical Care Medicine',
+    'Nephrology', 'Dialysis', 'Endocrinology', 'Diabetes & Metabolism',
+    'Rheumatology', 'Infectious Diseases', 'Immunology', 'Allergy Medicine',
+    
+    // Pediatric Specialties
+    'Pediatrics', 'Neonatology', 'Pediatric Cardiology', 'Pediatric Oncology',
+    'Pediatric Neurology', 'Pediatric Surgery', 'Pediatric Intensive Care',
+    'Developmental Pediatrics', 'Pediatric Endocrinology',
+    
+    // Women's Health & Reproductive Medicine
+    'Obstetrics & Gynecology', 'Maternal-Fetal Medicine', 'Gynecologic Oncology',
+    'Reproductive Endocrinology', 'Infertility Medicine', 'High-Risk Pregnancy',
+    
+    // Mental Health & Behavioral Sciences
+    'Psychiatry', 'Child & Adolescent Psychiatry', 'Geriatric Psychiatry',
+    'Addiction Medicine', 'Forensic Psychiatry', 'Clinical Psychology',
+    'Counseling Psychology', 'Neuropsychology', 'Behavioral Medicine',
+    
+    // Diagnostic & Laboratory Medicine
+    'Radiology', 'Interventional Radiology', 'Nuclear Medicine',
+    'Pathology', 'Clinical Pathology', 'Anatomical Pathology',
+    'Forensic Pathology', 'Laboratory Medicine', 'Transfusion Medicine',
+    
+    // Anesthesia & Pain Management
+    'Anesthesiology', 'Pain Medicine', 'Critical Care Anesthesia',
+    'Pediatric Anesthesia', 'Cardiac Anesthesia',
+    
+    // Emergency & Urgent Care
+    'Emergency Medicine', 'Trauma Medicine', 'Emergency Pediatrics',
+    'Toxicology', 'Disaster Medicine', 'Urgent Care',
+    
+    // Specialized Medicine
+    'Dermatology', 'Dermatopathology', 'Cosmetic Dermatology',
+    'Ophthalmology', 'Retina Specialist', 'Cornea Specialist', 'Glaucoma Specialist',
+    'ENT (Otolaryngology)', 'Head & Neck Surgery', 'Audiology',
+    'Urology', 'Pediatric Urology', 'Urologic Oncology',
+    
+    // Rehabilitation & Physical Medicine
+    'Physical Medicine & Rehabilitation', 'Sports Medicine',
+    'Occupational Medicine', 'Pain & Palliative Care',
+    
+    // Geriatric Medicine
+    'Geriatrics', 'Geriatric Psychiatry', 'Palliative Medicine',
+    'Hospice Medicine', 'Memory Care',
+    
+    // Allied Health Professionals
+    'Nursing', 'Critical Care Nursing', 'Oncology Nursing', 'Pediatric Nursing',
+    'Psychiatric Nursing', 'Community Health Nursing', 'Nurse Practitioner',
+    'Certified Nurse Midwife', 'Nurse Anesthetist',
+    
+    'Pharmacy', 'Clinical Pharmacy', 'Hospital Pharmacy', 'Oncology Pharmacy',
+    'Pediatric Pharmacy', 'Geriatric Pharmacy', 'Pharmaceutical Research',
+    
+    'Physiotherapy', 'Sports Physiotherapy', 'Neurological Physiotherapy',
+    'Pediatric Physiotherapy', 'Geriatric Physiotherapy', 'Cardiopulmonary PT',
+    
+    'Occupational Therapy', 'Speech & Language Therapy', 'Audiology',
+    'Clinical Social Work', 'Medical Social Work',
+    
+    // Nutrition & Dietetics
+    'Clinical Nutrition', 'Sports Nutrition', 'Pediatric Nutrition',
+    'Geriatric Nutrition', 'Oncology Nutrition', 'Renal Nutrition',
+    'Diabetes Education', 'Weight Management',
+    
+    // Medical Technology & Research
+    'Medical Research', 'Clinical Research', 'Biomedical Engineering',
+    'Medical Technology', 'Healthcare Informatics', 'Telemedicine',
+    'Public Health', 'Epidemiology', 'Health Policy',
+    
+    // Administration & Management
+    'Healthcare Administration', 'Hospital Management', 'Medical Coding',
+    'Health Information Management', 'Quality Assurance',
+    'Medical Affairs', 'Regulatory Affairs',
+    
+    // Alternative & Complementary Medicine
+    'Ayurveda', 'Homeopathy', 'Naturopathy', 'Acupuncture',
+    'Chiropractic Medicine', 'Integrative Medicine',
+    
+    // Dental Specialties
+    'General Dentistry', 'Oral & Maxillofacial Surgery', 'Orthodontics',
+    'Periodontology', 'Endodontics', 'Prosthodontics', 'Pediatric Dentistry',
+    'Oral Pathology', 'Dental Public Health',
+    
+    // Veterinary Medicine
+    'Veterinary Medicine', 'Veterinary Surgery', 'Veterinary Pathology',
+    
+    // Other Specialties
+    'Aerospace Medicine', 'Diving Medicine', 'Travel Medicine',
+    'Wilderness Medicine', 'Military Medicine', 'Prison Medicine',
+    'Medical Education', 'Medical Writing', 'Medical Ethics',
+    
     'Other'
   ];
 
   const degreeOptions = [
-    'MBBS',
-    'MD',
-    'MS',
-    'DM',
-    'MCh',
-    'DNB',
-    'BAMS',
-    'BHMS',
-    'BDS',
-    'MDS',
-    'BPT',
-    'MPT',
-    'B.Sc Nursing',
-    'M.Sc Nursing',
-    'B.Pharm',
-    'M.Pharm',
-    'PharmD',
-    'Ph.D',
+    // Medical Degrees
+    'MBBS', 'MD', 'MS', 'DM', 'MCh', 'DNB', 'FRCS', 'MRCP', 'FRCR',
+    'DO (Doctor of Osteopathy)', 'BAMS', 'BHMS', 'BUMS', 'BNYS',
+    
+    // Dental Degrees
+    'BDS', 'MDS', 'DMD', 'DDS', 'PhD in Dentistry',
+    
+    // Nursing Degrees
+    'B.Sc Nursing', 'M.Sc Nursing', 'B.Sc (Hons) Nursing', 'Post Basic B.Sc Nursing',
+    'M.Sc in Psychiatric Nursing', 'M.Sc in Community Health Nursing',
+    
+    // Pharmacy Degrees
+    'B.Pharm', 'M.Pharm', 'PharmD', 'PhD in Pharmacy', 'Diploma in Pharmacy',
+    
+    // Physiotherapy Degrees
+    'BPT', 'MPT', 'DPT', 'PhD in Physiotherapy', 'Diploma in Physiotherapy',
+    
+    // Allied Health Degrees
+    'B.Sc in Medical Technology', 'M.Sc in Medical Technology',
+    'B.Sc in Radiology', 'M.Sc in Radiology', 'B.Sc in Operation Theatre Technology',
+    'B.Sc in Medical Laboratory Technology', 'B.Sc in Respiratory Therapy',
+    'Bachelor of Occupational Therapy', 'Master of Occupational Therapy',
+    'Bachelor of Audiology & Speech Language Pathology',
+    'Master of Audiology & Speech Language Pathology',
+    
+    // Psychology Degrees
+    'M.A in Psychology', 'M.Sc in Psychology', 'M.Phil in Psychology',
+    'PhD in Psychology', 'PsyD', 'Diploma in Clinical Psychology',
+    
+    // Public Health Degrees
+    'MPH', 'DrPH', 'M.Sc in Public Health', 'M.Sc in Epidemiology',
+    'M.Sc in Health Administration', 'MBA in Healthcare Management',
+    
+    // Research & Academic Degrees
+    'PhD', 'M.Phil', 'M.Sc', 'M.A', 'Post Doctoral Fellowship',
+    
+    // Diploma & Certificate Courses
+    'Diploma in Medical Radio Diagnosis', 'Diploma in Anesthesia',
+    'Diploma in Gynecology & Obstetrics', 'Diploma in Pediatrics',
+    'Diploma in Orthopedics', 'Diploma in Ophthalmology',
+    'Diploma in Dermatology', 'Diploma in Psychiatry',
+    'Diploma in Emergency Medicine', 'Diploma in Family Medicine',
+    
+    // International Degrees
+    'ECFMG Certified', 'USMLE', 'PLAB', 'AMC', 'Medical Council Certification',
+    
     'Other'
   ];
+
+  // Get location data
+  const countries = Country.getAllCountries();
+  const states = formData.country ? State.getStatesOfCountry(formData.country) : [];
+  const cities = formData.state ? City.getCitiesOfState(formData.country, formData.state) : [];
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -115,7 +226,22 @@ export default function MedicalProfessionalForm({ onSubmit }) {
     });
   };
 
-  const handleLocationChange = (location) => {
+  const handleLocationChange = (field, value) => {
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      
+      if (field === 'country') {
+        updated.state = '';
+        updated.city = '';
+      } else if (field === 'state') {
+        updated.city = '';
+      }
+      
+      return updated;
+    });
+  };
+
+  const handleWorkLocationChange = (location) => {
     setFormData({
       ...formData,
       workLocations: formData.workLocations.includes(location)
@@ -143,7 +269,7 @@ export default function MedicalProfessionalForm({ onSubmit }) {
       // Generate unique file path
       const timestamp = Date.now();
       const fileName = `${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-      const filePath = `medical-verification/${auth.currentUser.uid}/${documentType}/${timestamp}_${fileName}`;
+      const filePath = `medical-verification/${formData.uid || 'temp'}/${documentType}/${timestamp}_${fileName}`;
 
       // Simulate progress updates
       const progressInterval = setInterval(() => {
@@ -236,6 +362,7 @@ export default function MedicalProfessionalForm({ onSubmit }) {
             <option key={spec} value={spec} className="text-gray-900">{spec}</option>
           ))}
         </select>
+        <p className="text-xs text-gray-500 ml-1">Select your primary area of medical practice</p>
       </div>
 
       {/* Degree */}
@@ -353,6 +480,64 @@ export default function MedicalProfessionalForm({ onSubmit }) {
         </p>
       </div>
 
+      {/* Location Information */}
+      <div className="space-y-4 bg-purple-50 p-6 rounded-2xl border border-purple-200">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Practice Location *</h3>
+        
+        <div className="space-y-2">
+          <label className="block text-sm font-semibold text-gray-700">Country *</label>
+          <select
+            value={formData.country}
+            onChange={(e) => handleLocationChange('country', e.target.value)}
+            required
+            className="w-full px-4 py-4 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-gray-900"
+          >
+            <option value="">Select your country</option>
+            {countries.map((country) => (
+              <option key={country.isoCode} value={country.isoCode}>
+                {country.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="block text-sm font-semibold text-gray-700">State/Province *</label>
+          <select
+            value={formData.state}
+            onChange={(e) => handleLocationChange('state', e.target.value)}
+            required
+            disabled={!formData.country}
+            className="w-full px-4 py-4 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+          >
+            <option value="">Select your state</option>
+            {states.map((state) => (
+              <option key={state.isoCode} value={state.isoCode}>
+                {state.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="block text-sm font-semibold text-gray-700">City *</label>
+          <select
+            value={formData.city}
+            onChange={(e) => handleLocationChange('city', e.target.value)}
+            required
+            disabled={!formData.state}
+            className="w-full px-4 py-4 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+          >
+            <option value="">Select your city</option>
+            {cities.map((city) => (
+              <option key={city.name} value={city.name}>
+                {city.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
       {/* Work Locations */}
       <div className="space-y-3">
         <label className="block text-sm font-semibold text-gray-700">
@@ -364,7 +549,7 @@ export default function MedicalProfessionalForm({ onSubmit }) {
               <input
                 type="checkbox"
                 checked={formData.workLocations.includes(location)}
-                onChange={() => handleLocationChange(location)}
+                onChange={() => handleWorkLocationChange(location)}
                 className="w-4 h-4 mt-0.5 text-purple-600 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
               />
               <div className="ml-3">

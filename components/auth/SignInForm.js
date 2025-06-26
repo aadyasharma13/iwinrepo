@@ -170,7 +170,7 @@ export default function SignInForm({ onForgotPassword }) {
       </form>
 
       {/* Help Section */}
-      <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+      {/* <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
         <div className="text-center">
           <p className="text-sm text-gray-600 mb-3">Need help accessing your account?</p>
           <div className="space-y-2">
@@ -185,7 +185,7 @@ export default function SignInForm({ onForgotPassword }) {
             </p>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }

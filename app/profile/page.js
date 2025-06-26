@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import { Country, State, City } from 'country-state-city';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import PatientProfile from '@/components/profile/PatientProfile';
@@ -17,28 +18,75 @@ export default function ProfilePage() {
   const [formData, setFormData] = useState({
     displayName: user?.displayName || '',
     email: user?.email || '',
-    location: user?.location || '',
     bio: user?.bio || '',
     phone: user?.phone || '',
     dateOfBirth: user?.dateOfBirth || '',
     gender: user?.gender || '',
     emergencyContact: user?.emergencyContact || '',
-    emergencyPhone: user?.emergencyPhone || ''
+    emergencyPhone: user?.emergencyPhone || '',
+    country: user?.country || '',
+    state: user?.state || '',
+    city: user?.city || ''
   });
 
+  // Get location data
+  const countries = Country.getAllCountries();
+  const states = formData.country ? State.getStatesOfCountry(formData.country) : [];
+  const cities = formData.state ? City.getCitiesOfState(formData.country, formData.state) : [];
+
+  const handleLocationChange = (field, value) => {
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      
+      // Reset dependent fields
+      if (field === 'country') {
+        updated.state = '';
+        updated.city = '';
+      } else if (field === 'state') {
+        updated.city = '';
+      }
+      
+      return updated;
+    });
+  };
+
   const handleBasicProfileUpdate = async () => {
+    // Validate required fields
+    if (!formData.displayName.trim()) {
+      alert('Please enter your name');
+      return false;
+    }
+
+    if (!formData.country || !formData.state || !formData.city) {
+      alert('Please select your complete location (country, state, and city)');
+      return false;
+    }
+
     setIsUpdating(true);
     try {
-      const result = await updateUserProfile(formData);
+      // Get country and state names for storage
+      const countryName = countries.find(c => c.isoCode === formData.country)?.name || formData.country;
+      const stateName = states.find(s => s.isoCode === formData.state)?.name || formData.state;
+
+      const updateData = {
+        ...formData,
+        location: `${formData.city}, ${stateName}, ${countryName}`, // Keep for backward compatibility
+        countryName,
+        stateName
+      };
+
+      const result = await updateUserProfile(updateData);
       if (result.success) {
         setIsEditing(false);
         return true;
       } else {
         console.error('Profile update failed:', result.error);
+        alert('Failed to update profile: ' + (result.error || 'Unknown error'));
         return false;
       }
     } catch (error) {
       console.error('Profile update error:', error);
+      alert('An error occurred while updating your profile');
       return false;
     } finally {
       setIsUpdating(false);
@@ -49,13 +97,15 @@ export default function ProfilePage() {
     setFormData({
       displayName: user?.displayName || '',
       email: user?.email || '',
-      location: user?.location || '',
       bio: user?.bio || '',
       phone: user?.phone || '',
       dateOfBirth: user?.dateOfBirth || '',
       gender: user?.gender || '',
       emergencyContact: user?.emergencyContact || '',
-      emergencyPhone: user?.emergencyPhone || ''
+      emergencyPhone: user?.emergencyPhone || '',
+      country: user?.country || '',
+      state: user?.state || '',
+      city: user?.city || ''
     });
     setIsEditing(false);
   };
@@ -190,13 +240,14 @@ export default function ProfilePage() {
                   {/* Basic Information */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
                       <input
                         type="text"
                         value={formData.displayName}
                         onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900 placeholder-gray-400"
                         placeholder="Enter your full name"
+                        required
                       />
                     </div>
 
@@ -219,17 +270,6 @@ export default function ProfilePage() {
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900 placeholder-gray-400"
                         placeholder="+1 (555) 123-4567"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
-                      <input
-                        type="text"
-                        value={formData.location}
-                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900 placeholder-gray-400"
-                        placeholder="City, State"
                       />
                     </div>
 
@@ -257,6 +297,86 @@ export default function ProfilePage() {
                         <option value="prefer-not-to-say">Prefer not to say</option>
                       </select>
                     </div>
+                  </div>
+
+                  {/* Location Section */}
+                  <div className="space-y-4 bg-emerald-50 p-6 rounded-2xl border border-emerald-200">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                      <svg className="w-5 h-5 text-emerald-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      Location Information *
+                    </h3>
+                    
+                    {/* Country */}
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-gray-700">
+                        Country *
+                      </label>
+                      <select
+                        value={formData.country}
+                        onChange={(e) => handleLocationChange('country', e.target.value)}
+                        required
+                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
+                      >
+                        <option value="">Select your country</option>
+                        {countries.map((country) => (
+                          <option key={country.isoCode} value={country.isoCode}>
+                            {country.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* State */}
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-gray-700">
+                        State/Province *
+                      </label>
+                      <select
+                        value={formData.state}
+                        onChange={(e) => handleLocationChange('state', e.target.value)}
+                        required
+                        disabled={!formData.country}
+                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      >
+                        <option value="">Select your state</option>
+                        {states.map((state) => (
+                          <option key={state.isoCode} value={state.isoCode}>
+                            {state.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* City */}
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-gray-700">
+                        City *
+                      </label>
+                      <select
+                        value={formData.city}
+                        onChange={(e) => handleLocationChange('city', e.target.value)}
+                        required
+                        disabled={!formData.state}
+                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      >
+                        <option value="">Select your city</option>
+                        {cities.map((city) => (
+                          <option key={city.name} value={city.name}>
+                            {city.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <p className="text-xs text-gray-500 bg-white p-3 rounded-xl border border-emerald-200">
+                      <svg className="w-4 h-4 text-emerald-600 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Your location helps us connect you with local healthcare resources and community members in your area.
+                    </p>
                   </div>
 
                   <div>
@@ -308,8 +428,8 @@ export default function ProfilePage() {
                     </button>
                     <button
                       onClick={handleBasicProfileUpdate}
-                      disabled={isUpdating}
-                      className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50"
+                      disabled={isUpdating || !formData.country || !formData.state || !formData.city}
+                      className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isUpdating ? 'Saving...' : 'Save Changes'}
                     </button>
@@ -409,17 +529,6 @@ export default function ProfilePage() {
                 Role Profile
               </button>
               
-              <button
-                onClick={() => setActiveTab('activity')}
-                className={`py-2 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === 'activity'
-                    ? 'border-emerald-500 text-emerald-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                Activity
-              </button>
-              
               {user.role === 'medical_professional' && (
                 <button
                   onClick={() => setActiveTab('verification')}
@@ -447,33 +556,6 @@ export default function ProfilePage() {
             )}
             
             {activeTab === 'profile' && renderRoleSpecificProfile()}
-            
-            {activeTab === 'activity' && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                <div className="p-6 border-b border-gray-100">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">Recent Activity</h3>
-                      <p className="text-sm text-gray-600">Your community interactions</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-12 text-center">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <h4 className="font-medium text-gray-900 mb-2">Activity Coming Soon</h4>
-                  <p className="text-gray-600 text-sm">Your community interactions will appear here.</p>
-                </div>
-              </div>
-            )}
             
             {activeTab === 'verification' && user.role === 'medical_professional' && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200">
@@ -593,15 +675,18 @@ export default function ProfilePage() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900">Quick Actions</h3>
-                    <p className="text-sm text-gray-600">Get support or explore community</p>
+                    <p className="text-sm text-gray-600">AI assistance and community support</p>
                   </div>
                 </div>
                 <div className="flex space-x-3">
                   <button
-                    onClick={() => router.push('/support')}
-                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                    onClick={() => router.push('/chatbot')}
+                    className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm flex items-center space-x-2"
                   >
-                    Support
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                    <span>AI Assistant</span>
                   </button>
                   <button
                     onClick={() => router.push('/community')}

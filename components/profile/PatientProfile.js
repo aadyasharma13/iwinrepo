@@ -20,6 +20,79 @@ export default function PatientProfile({ userData, onUpdate }) {
   const [customTreatment, setCustomTreatment] = useState('');
   const [newDiagnosis, setNewDiagnosis] = useState({ condition: '', diagnosisDate: '', severity: '' });
 
+  // Extensive disease/condition list matching PatientForm
+  const diseaseOptions = [
+    // Cancer Types
+    'Breast Cancer', 'Lung Cancer', 'Prostate Cancer', 'Colorectal Cancer', 'Skin Cancer (Melanoma)', 
+    'Liver Cancer', 'Pancreatic Cancer', 'Kidney Cancer', 'Bladder Cancer', 'Brain Cancer',
+    'Ovarian Cancer', 'Cervical Cancer', 'Endometrial Cancer', 'Stomach Cancer', 'Esophageal Cancer',
+    'Thyroid Cancer', 'Blood Cancer (Leukemia)', 'Lymphoma', 'Multiple Myeloma', 'Bone Cancer',
+    
+    // Cardiovascular Diseases
+    'Heart Disease', 'High Blood Pressure (Hypertension)', 'Heart Attack', 'Stroke', 'Heart Failure',
+    'Arrhythmia', 'Coronary Artery Disease', 'Peripheral Artery Disease', 'Deep Vein Thrombosis',
+    'Pulmonary Embolism', 'Atrial Fibrillation', 'Cardiomyopathy', 'Heart Valve Disease',
+    
+    // Diabetes & Endocrine
+    'Type 1 Diabetes', 'Type 2 Diabetes', 'Gestational Diabetes', 'Prediabetes', 'Thyroid Disease',
+    'Hyperthyroidism', 'Hypothyroidism', 'Adrenal Disorders', 'PCOS', 'Metabolic Syndrome',
+    
+    // Respiratory Diseases
+    'Asthma', 'COPD', 'Lung Disease', 'Pneumonia', 'Tuberculosis', 'Sleep Apnea',
+    'Pulmonary Fibrosis', 'Bronchitis', 'Emphysema', 'Cystic Fibrosis',
+    
+    // Neurological Disorders
+    'Alzheimer\'s Disease', 'Parkinson\'s Disease', 'Multiple Sclerosis', 'Epilepsy', 'Migraine',
+    'Dementia', 'ALS (Lou Gehrig\'s Disease)', 'Huntington\'s Disease', 'Cerebral Palsy',
+    'Spinal Cord Injury', 'Traumatic Brain Injury', 'Neuropathy', 'Seizure Disorder',
+    
+    // Mental Health
+    'Depression', 'Anxiety', 'Bipolar Disorder', 'PTSD', 'OCD', 'Schizophrenia',
+    'Panic Disorder', 'Social Anxiety', 'Eating Disorders', 'ADHD', 'Autism Spectrum Disorder',
+    
+    // Autoimmune Diseases
+    'Rheumatoid Arthritis', 'Lupus', 'Crohn\'s Disease', 'Ulcerative Colitis', 'Celiac Disease',
+    'Psoriasis', 'Hashimoto\'s Thyroiditis', 'Graves\' Disease', 'Sjogren\'s Syndrome',
+    'Scleroderma', 'Fibromyalgia', 'Chronic Fatigue Syndrome',
+    
+    // Kidney & Urological
+    'Chronic Kidney Disease', 'Kidney Stones', 'Urinary Tract Infection', 'Prostate Problems',
+    'Bladder Disorders', 'Incontinence', 'Dialysis', 'Kidney Transplant',
+    
+    // Gastrointestinal
+    'IBS (Irritable Bowel Syndrome)', 'GERD', 'Peptic Ulcer', 'Gallbladder Disease',
+    'Liver Disease', 'Hepatitis', 'Cirrhosis', 'Pancreatitis', 'Diverticulitis',
+    
+    // Musculoskeletal
+    'Arthritis', 'Osteoporosis', 'Back Pain', 'Joint Pain', 'Fractures', 'Muscle Disorders',
+    'Tendon/Ligament Injuries', 'Spinal Disorders', 'Hip Replacement', 'Knee Replacement',
+    
+    // Women's Health
+    'Endometriosis', 'Fibroids', 'Menopause', 'Pregnancy Complications', 'Infertility',
+    'Breast Disease', 'Pelvic Inflammatory Disease',
+    
+    // Men's Health
+    'Erectile Dysfunction', 'Low Testosterone', 'Benign Prostatic Hyperplasia',
+    
+    // Infectious Diseases
+    'HIV/AIDS', 'Hepatitis B', 'Hepatitis C', 'Malaria', 'Dengue', 'COVID-19',
+    
+    // Blood Disorders
+    'Anemia', 'Hemophilia', 'Sickle Cell Disease', 'Thalassemia', 'Blood Clotting Disorders',
+    
+    // Eye Conditions
+    'Glaucoma', 'Cataracts', 'Macular Degeneration', 'Diabetic Retinopathy', 'Vision Loss',
+    
+    // Skin Conditions
+    'Eczema', 'Dermatitis', 'Acne', 'Rosacea', 'Skin Allergies',
+    
+    // Rare Diseases
+    'Rare Genetic Disorders', 'Orphan Diseases',
+    
+    // Other
+    'Chronic Pain', 'Addiction/Substance Abuse', 'Obesity', 'Malnutrition', 'Other'
+  ];
+
   const treatmentOptions = [
     'Chemotherapy', 'Radiation Therapy', 'Surgery', 'Immunotherapy', 'Physiotherapy',
     'Medication Management', 'Lifestyle Changes', 'Alternative Medicine', 'Counseling/Therapy', 
@@ -74,9 +147,7 @@ export default function PatientProfile({ userData, onUpdate }) {
   };
 
   const handleTreatmentChange = (treatment) => {
-    if (treatment === 'Other') {
-      return; // Handle via custom input
-    }
+    if (treatment === 'Other') return; // Handle via custom input
     setFormData({
       ...formData,
       treatments: formData.treatments.includes(treatment)
@@ -86,9 +157,7 @@ export default function PatientProfile({ userData, onUpdate }) {
   };
 
   const handleStageChange = (stage) => {
-    if (stage === 'Other') {
-      return; // Handle via custom input
-    }
+    if (stage === 'Other') return; // Handle via custom input
     setFormData({ ...formData, currentStage: stage });
   };
 
@@ -257,18 +326,28 @@ export default function PatientProfile({ userData, onUpdate }) {
               <h3 className="text-lg font-semibold text-gray-900">Medical Diagnoses</h3>
               
               {/* Add New Diagnosis */}
-              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Add New Diagnosis</h4>
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-6">
+                <h4 className="text-md font-medium text-gray-900 mb-4 flex items-center">
+                  <svg className="w-5 h-5 text-emerald-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Add New Diagnosis
+                </h4>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-700">Condition/Disease</label>
-                    <input
-                      type="text"
+                    <label className="block text-sm font-semibold text-gray-700">Condition/Disease *</label>
+                    <select
                       value={newDiagnosis.condition}
                       onChange={(e) => setNewDiagnosis({ ...newDiagnosis, condition: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent placeholder-gray-500"
-                      placeholder="e.g., Breast Cancer, Type 2 Diabetes"
-                    />
+                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900"
+                    >
+                      <option value="">Select condition</option>
+                      {diseaseOptions.map((disease) => (
+                        <option key={disease} value={disease}>
+                          {disease}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="space-y-2">
                     <label className="block text-sm font-semibold text-gray-700">Diagnosis Date</label>
@@ -276,7 +355,7 @@ export default function PatientProfile({ userData, onUpdate }) {
                       type="date"
                       value={newDiagnosis.diagnosisDate}
                       onChange={(e) => setNewDiagnosis({ ...newDiagnosis, diagnosisDate: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-700"
+                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-700"
                     />
                   </div>
                   <div className="space-y-2">
@@ -284,11 +363,11 @@ export default function PatientProfile({ userData, onUpdate }) {
                     <select
                       value={newDiagnosis.severity}
                       onChange={(e) => setNewDiagnosis({ ...newDiagnosis, severity: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-700"
+                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-700"
                     >
-                      <option value="" className="text-gray-500">Select severity</option>
+                      <option value="">Select severity</option>
                       {severityOptions.map(severity => (
-                        <option key={severity} value={severity} className="text-gray-700">{severity}</option>
+                        <option key={severity} value={severity}>{severity}</option>
                       ))}
                     </select>
                   </div>
@@ -297,7 +376,7 @@ export default function PatientProfile({ userData, onUpdate }) {
                   type="button"
                   onClick={addDiagnosis}
                   disabled={!newDiagnosis.condition.trim()}
-                  className="mt-3 px-4 py-2 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="mt-4 px-6 py-3 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                 >
                   Add Diagnosis
                 </button>

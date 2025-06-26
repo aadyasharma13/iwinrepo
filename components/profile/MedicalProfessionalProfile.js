@@ -1,8 +1,10 @@
 'use client';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { Country, State, City } from 'country-state-city';
 
 export default function MedicalProfessionalProfile({ userData, onUpdate }) {
+  const { uploadFile, deleteFile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     specialization: userData.roleSpecificData?.specialization || '',
@@ -12,25 +14,179 @@ export default function MedicalProfessionalProfile({ userData, onUpdate }) {
     workLocations: userData.roleSpecificData?.workLocations || [],
     degree: userData.roleSpecificData?.degree || '',
     graduationYear: userData.roleSpecificData?.graduationYear || '',
-    additionalCertifications: userData.roleSpecificData?.additionalCertifications || []
+    additionalCertifications: userData.roleSpecificData?.additionalCertifications || [],
+    // Location fields
+    country: userData.roleSpecificData?.country || '',
+    state: userData.roleSpecificData?.state || '',
+    city: userData.roleSpecificData?.city || '',
+    // Documents
+    documents: userData.roleSpecificData?.documents || {
+      medicalDegree: null,
+      licenseDocument: null,
+      institutionId: null,
+      governmentId: null
+    }
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({});
+  const [isUploading, setIsUploading] = useState(false);
 
+  // Comprehensive medical specialization list matching MedicalProfessionalForm
   const specializationOptions = [
-    'General Medicine', 'Cardiology', 'Oncology', 'Neurology', 'Orthopedics',
-    'Pediatrics', 'Psychiatry', 'Dermatology', 'Radiology', 'Anesthesiology',
-    'Emergency Medicine', 'Internal Medicine', 'Surgery', 'Obstetrics & Gynecology',
-    'Ophthalmology', 'ENT (Otolaryngology)', 'Urology', 'Gastroenterology',
-    'Endocrinology', 'Pulmonology', 'Nephrology', 'Rheumatology',
-    'Infectious Diseases', 'Pathology', 'Physical Medicine & Rehabilitation',
-    'Nursing', 'Pharmacy', 'Physiotherapy', 'Psychology/Counseling',
-    'Nutrition/Dietetics', 'Medical Research', 'Healthcare Administration', 'Other'
+    // Primary Care & General Medicine
+    'General Medicine', 'Family Medicine', 'Internal Medicine', 'General Practice',
+    
+    // Surgical Specialties
+    'General Surgery', 'Orthopedic Surgery', 'Neurosurgery', 'Cardiovascular Surgery',
+    'Plastic Surgery', 'Pediatric Surgery', 'Urological Surgery', 'Thoracic Surgery',
+    'Vascular Surgery', 'Trauma Surgery', 'Transplant Surgery',
+    
+    // Medical Specialties
+    'Cardiology', 'Interventional Cardiology', 'Electrophysiology',
+    'Oncology', 'Medical Oncology', 'Radiation Oncology', 'Hematology',
+    'Neurology', 'Stroke Medicine', 'Epileptology', 'Movement Disorders',
+    'Gastroenterology', 'Hepatology', 'Pulmonology', 'Critical Care Medicine',
+    'Nephrology', 'Dialysis', 'Endocrinology', 'Diabetes & Metabolism',
+    'Rheumatology', 'Infectious Diseases', 'Immunology', 'Allergy Medicine',
+    
+    // Pediatric Specialties
+    'Pediatrics', 'Neonatology', 'Pediatric Cardiology', 'Pediatric Oncology',
+    'Pediatric Neurology', 'Pediatric Surgery', 'Pediatric Intensive Care',
+    'Developmental Pediatrics', 'Pediatric Endocrinology',
+    
+    // Women's Health & Reproductive Medicine
+    'Obstetrics & Gynecology', 'Maternal-Fetal Medicine', 'Gynecologic Oncology',
+    'Reproductive Endocrinology', 'Infertility Medicine', 'High-Risk Pregnancy',
+    
+    // Mental Health & Behavioral Sciences
+    'Psychiatry', 'Child & Adolescent Psychiatry', 'Geriatric Psychiatry',
+    'Addiction Medicine', 'Forensic Psychiatry', 'Clinical Psychology',
+    'Counseling Psychology', 'Neuropsychology', 'Behavioral Medicine',
+    
+    // Diagnostic & Laboratory Medicine
+    'Radiology', 'Interventional Radiology', 'Nuclear Medicine',
+    'Pathology', 'Clinical Pathology', 'Anatomical Pathology',
+    'Forensic Pathology', 'Laboratory Medicine', 'Transfusion Medicine',
+    
+    // Anesthesia & Pain Management
+    'Anesthesiology', 'Pain Medicine', 'Critical Care Anesthesia',
+    'Pediatric Anesthesia', 'Cardiac Anesthesia',
+    
+    // Emergency & Urgent Care
+    'Emergency Medicine', 'Trauma Medicine', 'Emergency Pediatrics',
+    'Toxicology', 'Disaster Medicine', 'Urgent Care',
+    
+    // Specialized Medicine
+    'Dermatology', 'Dermatopathology', 'Cosmetic Dermatology',
+    'Ophthalmology', 'Retina Specialist', 'Cornea Specialist', 'Glaucoma Specialist',
+    'ENT (Otolaryngology)', 'Head & Neck Surgery', 'Audiology',
+    'Urology', 'Pediatric Urology', 'Urologic Oncology',
+    
+    // Rehabilitation & Physical Medicine
+    'Physical Medicine & Rehabilitation', 'Sports Medicine',
+    'Occupational Medicine', 'Pain & Palliative Care',
+    
+    // Geriatric Medicine
+    'Geriatrics', 'Geriatric Psychiatry', 'Palliative Medicine',
+    'Hospice Medicine', 'Memory Care',
+    
+    // Allied Health Professionals
+    'Nursing', 'Critical Care Nursing', 'Oncology Nursing', 'Pediatric Nursing',
+    'Psychiatric Nursing', 'Community Health Nursing', 'Nurse Practitioner',
+    'Certified Nurse Midwife', 'Nurse Anesthetist',
+    
+    'Pharmacy', 'Clinical Pharmacy', 'Hospital Pharmacy', 'Oncology Pharmacy',
+    'Pediatric Pharmacy', 'Geriatric Pharmacy', 'Pharmaceutical Research',
+    
+    'Physiotherapy', 'Sports Physiotherapy', 'Neurological Physiotherapy',
+    'Pediatric Physiotherapy', 'Geriatric Physiotherapy', 'Cardiopulmonary PT',
+    
+    'Occupational Therapy', 'Speech & Language Therapy', 'Audiology',
+    'Clinical Social Work', 'Medical Social Work',
+    
+    // Nutrition & Dietetics
+    'Clinical Nutrition', 'Sports Nutrition', 'Pediatric Nutrition',
+    'Geriatric Nutrition', 'Oncology Nutrition', 'Renal Nutrition',
+    'Diabetes Education', 'Weight Management',
+    
+    // Medical Technology & Research
+    'Medical Research', 'Clinical Research', 'Biomedical Engineering',
+    'Medical Technology', 'Healthcare Informatics', 'Telemedicine',
+    'Public Health', 'Epidemiology', 'Health Policy',
+    
+    // Administration & Management
+    'Healthcare Administration', 'Hospital Management', 'Medical Coding',
+    'Health Information Management', 'Quality Assurance',
+    'Medical Affairs', 'Regulatory Affairs',
+    
+    // Alternative & Complementary Medicine
+    'Ayurveda', 'Homeopathy', 'Naturopathy', 'Acupuncture',
+    'Chiropractic Medicine', 'Integrative Medicine',
+    
+    // Dental Specialties
+    'General Dentistry', 'Oral & Maxillofacial Surgery', 'Orthodontics',
+    'Periodontology', 'Endodontics', 'Prosthodontics', 'Pediatric Dentistry',
+    'Oral Pathology', 'Dental Public Health',
+    
+    // Veterinary Medicine
+    'Veterinary Medicine', 'Veterinary Surgery', 'Veterinary Pathology',
+    
+    // Other Specialties
+    'Aerospace Medicine', 'Diving Medicine', 'Travel Medicine',
+    'Wilderness Medicine', 'Military Medicine', 'Prison Medicine',
+    'Medical Education', 'Medical Writing', 'Medical Ethics',
+    
+    'Other'
   ];
 
   const degreeOptions = [
-    'MBBS', 'MD', 'MS', 'DM', 'MCh', 'DNB', 'BAMS', 'BHMS', 'BDS', 'MDS',
-    'BPT', 'MPT', 'B.Sc Nursing', 'M.Sc Nursing', 'B.Pharm', 'M.Pharm',
-    'PharmD', 'Ph.D', 'Other'
+    // Medical Degrees
+    'MBBS', 'MD', 'MS', 'DM', 'MCh', 'DNB', 'FRCS', 'MRCP', 'FRCR',
+    'DO (Doctor of Osteopathy)', 'BAMS', 'BHMS', 'BUMS', 'BNYS',
+    
+    // Dental Degrees
+    'BDS', 'MDS', 'DMD', 'DDS', 'PhD in Dentistry',
+    
+    // Nursing Degrees
+    'B.Sc Nursing', 'M.Sc Nursing', 'B.Sc (Hons) Nursing', 'Post Basic B.Sc Nursing',
+    'M.Sc in Psychiatric Nursing', 'M.Sc in Community Health Nursing',
+    
+    // Pharmacy Degrees
+    'B.Pharm', 'M.Pharm', 'PharmD', 'PhD in Pharmacy', 'Diploma in Pharmacy',
+    
+    // Physiotherapy Degrees
+    'BPT', 'MPT', 'DPT', 'PhD in Physiotherapy', 'Diploma in Physiotherapy',
+    
+    // Allied Health Degrees
+    'B.Sc in Medical Technology', 'M.Sc in Medical Technology',
+    'B.Sc in Radiology', 'M.Sc in Radiology', 'B.Sc in Operation Theatre Technology',
+    'B.Sc in Medical Laboratory Technology', 'B.Sc in Respiratory Therapy',
+    'Bachelor of Occupational Therapy', 'Master of Occupational Therapy',
+    'Bachelor of Audiology & Speech Language Pathology',
+    'Master of Audiology & Speech Language Pathology',
+    
+    // Psychology Degrees
+    'M.A in Psychology', 'M.Sc in Psychology', 'M.Phil in Psychology',
+    'PhD in Psychology', 'PsyD', 'Diploma in Clinical Psychology',
+    
+    // Public Health Degrees
+    'MPH', 'DrPH', 'M.Sc in Public Health', 'M.Sc in Epidemiology',
+    'M.Sc in Health Administration', 'MBA in Healthcare Management',
+    
+    // Research & Academic Degrees
+    'PhD', 'M.Phil', 'M.Sc', 'M.A', 'Post Doctoral Fellowship',
+    
+    // Diploma & Certificate Courses
+    'Diploma in Medical Radio Diagnosis', 'Diploma in Anesthesia',
+    'Diploma in Gynecology & Obstetrics', 'Diploma in Pediatrics',
+    'Diploma in Orthopedics', 'Diploma in Ophthalmology',
+    'Diploma in Dermatology', 'Diploma in Psychiatry',
+    'Diploma in Emergency Medicine', 'Diploma in Family Medicine',
+    
+    // International Degrees
+    'ECFMG Certified', 'USMLE', 'PLAB', 'AMC', 'Medical Council Certification',
+    
+    'Other'
   ];
 
   const workLocationOptions = [
@@ -42,6 +198,11 @@ export default function MedicalProfessionalProfile({ userData, onUpdate }) {
     'Fellowship', 'Board Certification', 'Specialty Training', 'Research Publications',
     'Teaching Experience', 'International Training', 'Awards/Recognition', 'Other'
   ];
+
+  // Get location data
+  const countries = Country.getAllCountries();
+  const states = formData.country ? State.getStatesOfCountry(formData.country) : [];
+  const cities = formData.state ? City.getCitiesOfState(formData.country, formData.state) : [];
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -70,7 +231,16 @@ export default function MedicalProfessionalProfile({ userData, onUpdate }) {
       workLocations: userData.roleSpecificData?.workLocations || [],
       degree: userData.roleSpecificData?.degree || '',
       graduationYear: userData.roleSpecificData?.graduationYear || '',
-      additionalCertifications: userData.roleSpecificData?.additionalCertifications || []
+      additionalCertifications: userData.roleSpecificData?.additionalCertifications || [],
+      country: userData.roleSpecificData?.country || '',
+      state: userData.roleSpecificData?.state || '',
+      city: userData.roleSpecificData?.city || '',
+      documents: userData.roleSpecificData?.documents || {
+        medicalDegree: null,
+        licenseDocument: null,
+        institutionId: null,
+        governmentId: null
+      }
     });
     setIsEditing(false);
   };
@@ -91,6 +261,83 @@ export default function MedicalProfessionalProfile({ userData, onUpdate }) {
         ? formData.additionalCertifications.filter(c => c !== certification)
         : [...formData.additionalCertifications, certification]
     });
+  };
+
+  const handleLocationFieldChange = (field, value) => {
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      
+      if (field === 'country') {
+        updated.state = '';
+        updated.city = '';
+      } else if (field === 'state') {
+        updated.city = '';
+      }
+      
+      return updated;
+    });
+  };
+
+  const handleFileUpload = async (documentType, file) => {
+    if (!file) return;
+
+    setIsUploading(true);
+    setUploadProgress({ ...uploadProgress, [documentType]: 0 });
+
+    try {
+      const timestamp = Date.now();
+      const fileName = `${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+      const filePath = `medical-verification/${userData.uid}/${documentType}/${timestamp}_${fileName}`;
+
+      // Simulate progress updates
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          const currentProgress = prev[documentType] || 0;
+          const newProgress = Math.min(currentProgress + 10, 90);
+          return { ...prev, [documentType]: newProgress };
+        });
+      }, 200);
+
+      const uploadResult = await uploadFile(file, filePath);
+
+      clearInterval(progressInterval);
+
+      if (uploadResult.success) {
+        setUploadProgress(prev => ({ ...prev, [documentType]: 100 }));
+
+        setFormData(prev => ({
+          ...prev,
+          documents: {
+            ...prev.documents,
+            [documentType]: uploadResult.url
+          }
+        }));
+
+        setTimeout(() => {
+          setUploadProgress(prev => ({ ...prev, [documentType]: 0 }));
+        }, 1000);
+      } else {
+        setUploadProgress(prev => ({ ...prev, [documentType]: 0 }));
+        alert(`Upload failed: ${uploadResult.error}`);
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      setUploadProgress(prev => ({ ...prev, [documentType]: 0 }));
+      alert('Upload failed. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const removeDocument = async (documentType) => {
+    setFormData(prev => ({
+      ...prev,
+      documents: {
+        ...prev.documents,
+        [documentType]: null
+      }
+    }));
+    setUploadProgress(prev => ({ ...prev, [documentType]: 0 }));
   };
 
   const getVerificationStatus = () => {
@@ -116,6 +363,95 @@ export default function MedicalProfessionalProfile({ userData, onUpdate }) {
   };
 
   const verificationStatus = getVerificationStatus();
+
+  const getLocationName = (code, type) => {
+    if (!code) return '';
+    
+    switch (type) {
+      case 'country':
+        const country = countries.find(c => c.isoCode === code);
+        return country?.name || code;
+      case 'state':
+        const state = states.find(s => s.isoCode === code);
+        return state?.name || code;
+      case 'city':
+        return code; // City is stored as name, not code
+      default:
+        return code;
+    }
+  };
+
+  const DocumentUpload = ({ documentType, file, progress, onUpload, onRemove }) => (
+    <div>
+      {!formData.documents[documentType] ? (
+        <div className="relative border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-purple-400 transition-colors">
+          <svg className="w-10 h-10 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <p className="text-sm text-gray-600 mb-2">
+            Drop document here or <span className="text-purple-600 font-medium">browse files</span>
+          </p>
+          <input
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            onChange={(e) => onUpload(documentType, e.target.files[0])}
+            disabled={isUploading}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+          />
+        </div>
+      ) : (
+        <div className="border border-gray-200 rounded-xl p-4 bg-green-50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">Document uploaded</p>
+                <p className="text-xs text-gray-500">Click to view or replace</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <a
+                href={formData.documents[documentType]}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:text-blue-700 transition-colors p-1"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              </a>
+              <button
+                type="button"
+                onClick={() => onRemove(documentType)}
+                disabled={isUploading}
+                className="text-red-500 hover:text-red-700 transition-colors p-1 disabled:opacity-50"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          {progress > 0 && progress < 100 && (
+            <div className="mt-3">
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                ></div>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Uploading... {progress}%</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -203,85 +539,143 @@ export default function MedicalProfessionalProfile({ userData, onUpdate }) {
             {/* Basic Professional Info */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">Specialization</label>
+                <label className="block text-sm font-semibold text-gray-700">Medical Specialization *</label>
                 <select
                   value={formData.specialization}
                   onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-700"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
                 >
-                  <option value="" className="text-gray-500">Select specialization</option>
+                  <option value="">Select your specialization</option>
                   {specializationOptions.map((spec) => (
-                    <option key={spec} value={spec} className="text-gray-700">{spec}</option>
+                    <option key={spec} value={spec}>{spec}</option>
                   ))}
                 </select>
+                <p className="text-xs text-gray-500 ml-1">Select your primary area of medical practice</p>
               </div>
 
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">Primary Degree</label>
+                <label className="block text-sm font-semibold text-gray-700">Primary Medical Degree *</label>
                 <select
                   value={formData.degree}
                   onChange={(e) => setFormData({ ...formData, degree: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-700"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
                 >
-                  <option value="" className="text-gray-500">Select degree</option>
+                  <option value="">Select your degree</option>
                   {degreeOptions.map((degree) => (
-                    <option key={degree} value={degree} className="text-gray-700">{degree}</option>
+                    <option key={degree} value={degree}>{degree}</option>
                   ))}
                 </select>
               </div>
 
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">Years of Experience</label>
+                <label className="block text-sm font-semibold text-gray-700">Years of Experience *</label>
                 <select
                   value={formData.yearsOfExperience}
                   onChange={(e) => setFormData({ ...formData, yearsOfExperience: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-700"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
                 >
-                  <option value="" className="text-gray-500">Select experience range</option>
-                  <option value="0-2" className="text-gray-700">0-2 years</option>
-                  <option value="3-5" className="text-gray-700">3-5 years</option>
-                  <option value="6-10" className="text-gray-700">6-10 years</option>
-                  <option value="11-15" className="text-gray-700">11-15 years</option>
-                  <option value="16-20" className="text-gray-700">16-20 years</option>
-                  <option value="21+" className="text-gray-700">21+ years</option>
+                  <option value="">Select experience range</option>
+                  <option value="0-2">0-2 years</option>
+                  <option value="3-5">3-5 years</option>
+                  <option value="6-10">6-10 years</option>
+                  <option value="11-15">11-15 years</option>
+                  <option value="16-20">16-20 years</option>
+                  <option value="21+">21+ years</option>
                 </select>
               </div>
 
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">Graduation Year</label>
+                <label className="block text-sm font-semibold text-gray-700">Graduation Year *</label>
                 <input
                   type="number"
                   value={formData.graduationYear}
                   onChange={(e) => setFormData({ ...formData, graduationYear: e.target.value })}
                   min="1950"
                   max={new Date().getFullYear()}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-gray-500 text-gray-700"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-gray-500 text-gray-900"
                   placeholder="YYYY"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-700">Primary Institution</label>
+              <label className="block text-sm font-semibold text-gray-700">Primary Institution/Hospital *</label>
               <input
                 type="text"
                 value={formData.primaryInstitution}
                 onChange={(e) => setFormData({ ...formData, primaryInstitution: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-gray-500 text-gray-700"
-                placeholder="Hospital/Clinic name"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-gray-500 text-gray-900"
+                placeholder="e.g., Apollo Hospital, AIIMS, Private Practice"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-700">License Number</label>
+              <label className="block text-sm font-semibold text-gray-700">Medical License/Registration Number *</label>
               <input
                 type="text"
                 value={formData.licenseNumber}
                 onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-gray-500 text-gray-700"
-                placeholder="Medical license/registration number"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-gray-500 text-gray-900"
+                placeholder="State Medical Council Registration Number"
               />
-              <p className="text-xs text-gray-500">Note: License information cannot be changed after verification</p>
+              <p className="text-xs text-gray-500">This will be verified with the Medical Council database</p>
+            </div>
+
+            {/* Location Information */}
+            <div className="space-y-4 bg-purple-50 p-6 rounded-2xl border border-purple-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Practice Location *</h3>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700">Country *</label>
+                  <select
+                    value={formData.country}
+                    onChange={(e) => handleLocationFieldChange('country', e.target.value)}
+                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                  >
+                    <option value="">Select your country</option>
+                    {countries.map((country) => (
+                      <option key={country.isoCode} value={country.isoCode}>
+                        {country.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700">State/Province *</label>
+                  <select
+                    value={formData.state}
+                    onChange={(e) => handleLocationFieldChange('state', e.target.value)}
+                    disabled={!formData.country}
+                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  >
+                    <option value="">Select your state</option>
+                    {states.map((state) => (
+                      <option key={state.isoCode} value={state.isoCode}>
+                        {state.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700">City *</label>
+                  <select
+                    value={formData.city}
+                    onChange={(e) => handleLocationFieldChange('city', e.target.value)}
+                    disabled={!formData.state}
+                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  >
+                    <option value="">Select your city</option>
+                    {cities.map((city) => (
+                      <option key={city.name} value={city.name}>
+                        {city.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
 
             {/* Work Locations */}
@@ -372,6 +766,57 @@ export default function MedicalProfessionalProfile({ userData, onUpdate }) {
               )}
             </div>
 
+            {/* Document Upload Section */}
+            <div className="space-y-6 border-t border-gray-200 pt-6">
+              <h3 className="text-lg font-semibold text-gray-900">Verification Documents</h3>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700">Medical Degree Certificate *</label>
+                  <DocumentUpload
+                    documentType="medicalDegree"
+                    file={formData.documents.medicalDegree}
+                    progress={uploadProgress.medicalDegree}
+                    onUpload={handleFileUpload}
+                    onRemove={removeDocument}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700">Medical License Certificate *</label>
+                  <DocumentUpload
+                    documentType="licenseDocument"
+                    file={formData.documents.licenseDocument}
+                    progress={uploadProgress.licenseDocument}
+                    onUpload={handleFileUpload}
+                    onRemove={removeDocument}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700">Institution ID/Work Proof</label>
+                  <DocumentUpload
+                    documentType="institutionId"
+                    file={formData.documents.institutionId}
+                    progress={uploadProgress.institutionId}
+                    onUpload={handleFileUpload}
+                    onRemove={removeDocument}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700">Government ID *</label>
+                  <DocumentUpload
+                    documentType="governmentId"
+                    file={formData.documents.governmentId}
+                    progress={uploadProgress.governmentId}
+                    onUpload={handleFileUpload}
+                    onRemove={removeDocument}
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 pt-6 border-t border-gray-200">
               <button
@@ -424,15 +869,17 @@ export default function MedicalProfessionalProfile({ userData, onUpdate }) {
                 </div>
 
                 <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Graduation Year</label>
-                  <p className="text-gray-900">{formData.graduationYear || 'Not specified'}</p>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Practice Location</label>
+                  <p className="text-gray-900">
+                    {formData.country && formData.state && formData.city
+                      ? `${formData.city}, ${getLocationName(formData.state, 'state')}, ${getLocationName(formData.country, 'country')}`
+                      : 'Not specified'}
+                  </p>
                 </div>
 
                 <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">License Number</label>
-                  <p className="text-gray-900 font-mono text-sm">
-                    {formData.licenseNumber ? `****${formData.licenseNumber.slice(-4)}` : 'Not specified'}
-                  </p>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Graduation Year</label>
+                  <p className="text-gray-900">{formData.graduationYear || 'Not specified'}</p>
                 </div>
               </div>
             </div>
@@ -470,11 +917,11 @@ export default function MedicalProfessionalProfile({ userData, onUpdate }) {
             </div>
 
             {/* Documents Section - View Only */}
-            {userData.roleSpecificData?.documents && (
+            {formData.documents && Object.values(formData.documents).some(doc => doc) && (
               <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
                 <label className="block text-sm font-semibold text-gray-700 mb-3">Verification Documents</label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {Object.entries(userData.roleSpecificData.documents).map(([key, url]) => url && (
+                  {Object.entries(formData.documents).map(([key, url]) => url && (
                     <div key={key} className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
                       <span className="text-sm font-medium text-gray-700 capitalize">
                         {key.replace(/([A-Z])/g, ' $1').trim()}

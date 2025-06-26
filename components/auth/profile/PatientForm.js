@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { Country, State, City } from 'country-state-city';
 
 export default function PatientForm({ onSubmit }) {
   const [formData, setFormData] = useState({
@@ -8,8 +9,85 @@ export default function PatientForm({ onSubmit }) {
     currentStage: '',
     treatments: [],
     hospital: '',
-    doctorName: ''
+    doctorName: '',
+    // Add location fields
+    country: '',
+    state: '',
+    city: ''
   });
+
+  // Extensive disease/condition list
+  const diseaseOptions = [
+    // Cancer Types
+    'Breast Cancer', 'Lung Cancer', 'Prostate Cancer', 'Colorectal Cancer', 'Skin Cancer (Melanoma)', 
+    'Liver Cancer', 'Pancreatic Cancer', 'Kidney Cancer', 'Bladder Cancer', 'Brain Cancer',
+    'Ovarian Cancer', 'Cervical Cancer', 'Endometrial Cancer', 'Stomach Cancer', 'Esophageal Cancer',
+    'Thyroid Cancer', 'Blood Cancer (Leukemia)', 'Lymphoma', 'Multiple Myeloma', 'Bone Cancer',
+    
+    // Cardiovascular Diseases
+    'Heart Disease', 'High Blood Pressure (Hypertension)', 'Heart Attack', 'Stroke', 'Heart Failure',
+    'Arrhythmia', 'Coronary Artery Disease', 'Peripheral Artery Disease', 'Deep Vein Thrombosis',
+    'Pulmonary Embolism', 'Atrial Fibrillation', 'Cardiomyopathy', 'Heart Valve Disease',
+    
+    // Diabetes & Endocrine
+    'Type 1 Diabetes', 'Type 2 Diabetes', 'Gestational Diabetes', 'Prediabetes', 'Thyroid Disease',
+    'Hyperthyroidism', 'Hypothyroidism', 'Adrenal Disorders', 'PCOS', 'Metabolic Syndrome',
+    
+    // Respiratory Diseases
+    'Asthma', 'COPD', 'Lung Disease', 'Pneumonia', 'Tuberculosis', 'Sleep Apnea',
+    'Pulmonary Fibrosis', 'Bronchitis', 'Emphysema', 'Cystic Fibrosis',
+    
+    // Neurological Disorders
+    'Alzheimer\'s Disease', 'Parkinson\'s Disease', 'Multiple Sclerosis', 'Epilepsy', 'Migraine',
+    'Dementia', 'ALS (Lou Gehrig\'s Disease)', 'Huntington\'s Disease', 'Cerebral Palsy',
+    'Spinal Cord Injury', 'Traumatic Brain Injury', 'Neuropathy', 'Seizure Disorder',
+    
+    // Mental Health
+    'Depression', 'Anxiety', 'Bipolar Disorder', 'PTSD', 'OCD', 'Schizophrenia',
+    'Panic Disorder', 'Social Anxiety', 'Eating Disorders', 'ADHD', 'Autism Spectrum Disorder',
+    
+    // Autoimmune Diseases
+    'Rheumatoid Arthritis', 'Lupus', 'Crohn\'s Disease', 'Ulcerative Colitis', 'Celiac Disease',
+    'Psoriasis', 'Hashimoto\'s Thyroiditis', 'Graves\' Disease', 'Sjogren\'s Syndrome',
+    'Scleroderma', 'Fibromyalgia', 'Chronic Fatigue Syndrome',
+    
+    // Kidney & Urological
+    'Chronic Kidney Disease', 'Kidney Stones', 'Urinary Tract Infection', 'Prostate Problems',
+    'Bladder Disorders', 'Incontinence', 'Dialysis', 'Kidney Transplant',
+    
+    // Gastrointestinal
+    'IBS (Irritable Bowel Syndrome)', 'GERD', 'Peptic Ulcer', 'Gallbladder Disease',
+    'Liver Disease', 'Hepatitis', 'Cirrhosis', 'Pancreatitis', 'Diverticulitis',
+    
+    // Musculoskeletal
+    'Arthritis', 'Osteoporosis', 'Back Pain', 'Joint Pain', 'Fractures', 'Muscle Disorders',
+    'Tendon/Ligament Injuries', 'Spinal Disorders', 'Hip Replacement', 'Knee Replacement',
+    
+    // Women's Health
+    'Endometriosis', 'Fibroids', 'Menopause', 'Pregnancy Complications', 'Infertility',
+    'Breast Disease', 'Pelvic Inflammatory Disease',
+    
+    // Men's Health
+    'Erectile Dysfunction', 'Low Testosterone', 'Benign Prostatic Hyperplasia',
+    
+    // Infectious Diseases
+    'HIV/AIDS', 'Hepatitis B', 'Hepatitis C', 'Malaria', 'Dengue', 'COVID-19',
+    
+    // Blood Disorders
+    'Anemia', 'Hemophilia', 'Sickle Cell Disease', 'Thalassemia', 'Blood Clotting Disorders',
+    
+    // Eye Conditions
+    'Glaucoma', 'Cataracts', 'Macular Degeneration', 'Diabetic Retinopathy', 'Vision Loss',
+    
+    // Skin Conditions
+    'Eczema', 'Dermatitis', 'Acne', 'Rosacea', 'Skin Allergies',
+    
+    // Rare Diseases
+    'Rare Genetic Disorders', 'Orphan Diseases',
+    
+    // Other
+    'Chronic Pain', 'Addiction/Substance Abuse', 'Obesity', 'Malnutrition', 'Other'
+  ];
 
   const treatmentOptions = [
     'Chemotherapy',
@@ -35,6 +113,11 @@ export default function PatientForm({ onSubmit }) {
     'Other'
   ];
 
+  // Get location data
+  const countries = Country.getAllCountries();
+  const states = formData.country ? State.getStatesOfCountry(formData.country) : [];
+  const cities = formData.state ? City.getCitiesOfState(formData.country, formData.state) : [];
+
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit(formData);
@@ -56,6 +139,22 @@ export default function PatientForm({ onSubmit }) {
     });
   };
 
+  const handleLocationChange = (field, value) => {
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      
+      // Reset dependent fields
+      if (field === 'country') {
+        updated.state = '';
+        updated.city = '';
+      } else if (field === 'state') {
+        updated.city = '';
+      }
+      
+      return updated;
+    });
+  };
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -70,28 +169,26 @@ export default function PatientForm({ onSubmit }) {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Diagnosis */}
+        {/* Diagnosis - Now a dropdown */}
         <div className="space-y-2">
           <label className="block text-sm font-semibold text-gray-700">
-            Diagnosis / Condition *
+            Primary Diagnosis / Condition *
           </label>
-          <div className="relative">
-            <input
-              type="text"
-              name="diagnosis"
-              value={formData.diagnosis}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-4 pl-12 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent focus:bg-white transition-all duration-200 text-gray-900 placeholder-gray-500"
-              placeholder="e.g., Breast Cancer, Type 2 Diabetes, Anxiety"
-            />
-            <div className="absolute left-4 top-1/2 -translate-y-1/2">
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-          </div>
-          <p className="text-xs text-gray-500 ml-1">You can enter multiple conditions separated by commas</p>
+          <select
+            name="diagnosis"
+            value={formData.diagnosis}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent focus:bg-white transition-all duration-200 text-gray-900"
+          >
+            <option value="">Select your primary condition</option>
+            {diseaseOptions.map((disease) => (
+              <option key={disease} value={disease}>
+                {disease}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-gray-500 ml-1">Select your primary condition from the list</p>
         </div>
 
         {/* Diagnosis Date */}
@@ -158,6 +255,73 @@ export default function PatientForm({ onSubmit }) {
                 </div>
               </label>
             ))}
+          </div>
+        </div>
+
+        {/* Location Section */}
+        <div className="space-y-4 bg-emerald-50 p-6 rounded-2xl border border-emerald-200">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Location Information *</h3>
+          
+          {/* Country */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-gray-700">
+              Country *
+            </label>
+            <select
+              value={formData.country}
+              onChange={(e) => handleLocationChange('country', e.target.value)}
+              required
+              className="w-full px-4 py-4 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 text-gray-900"
+            >
+              <option value="">Select your country</option>
+              {countries.map((country) => (
+                <option key={country.isoCode} value={country.isoCode}>
+                  {country.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* State */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-gray-700">
+              State/Province *
+            </label>
+            <select
+              value={formData.state}
+              onChange={(e) => handleLocationChange('state', e.target.value)}
+              required
+              disabled={!formData.country}
+              className="w-full px-4 py-4 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+            >
+              <option value="">Select your state</option>
+              {states.map((state) => (
+                <option key={state.isoCode} value={state.isoCode}>
+                  {state.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* City */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-gray-700">
+              City *
+            </label>
+            <select
+              value={formData.city}
+              onChange={(e) => handleLocationChange('city', e.target.value)}
+              required
+              disabled={!formData.state}
+              className="w-full px-4 py-4 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+            >
+              <option value="">Select your city</option>
+              {cities.map((city) => (
+                <option key={city.name} value={city.name}>
+                  {city.name}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
