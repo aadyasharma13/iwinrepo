@@ -20,7 +20,7 @@ export default function Footer() {
               </div>
               <div className="flex flex-col">
                 <span className="ml-[-15] text-2xl font-bold text-white tracking-tight">I-Win</span>
-                <span className="ml-[-15] text-sm text-gray-400 -mt-1">Healthcare Community</span>
+                <span className="ml-[-15] text-sm text-gray-400 -mt-1">Healing Through Hope</span>
               </div>
             </div>
             <p className="text-gray-300 text-lg leading-relaxed mb-6 max-w-md">
