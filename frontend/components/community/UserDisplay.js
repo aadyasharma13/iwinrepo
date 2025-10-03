@@ -52,14 +52,10 @@ export default function UserDisplay({
 
   const getAvatarSize = () => {
     switch (size) {
-      case "xs":
-        return "w-6 h-6";
       case "sm":
         return "w-8 h-8";
       case "lg":
         return "w-12 h-12";
-      case "xl":
-        return "w-16 h-16";
       default:
         return "w-10 h-10";
     }
@@ -71,8 +67,6 @@ export default function UserDisplay({
         return "text-xs";
       case "lg":
         return "text-base";
-      case "xl":
-        return "text-lg";
       default:
         return "text-sm";
     }
@@ -111,10 +105,7 @@ export default function UserDisplay({
     );
   }
 
-  const displayName = userData.displayName || 
-    `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || 
-    userData.email?.split('@')[0] || 
-    "Anonymous";
+  const displayName = userData.displayName || "Anonymous";
   const avatarText = userData.photoURL
     ? ""
     : displayName.charAt(0).toUpperCase();

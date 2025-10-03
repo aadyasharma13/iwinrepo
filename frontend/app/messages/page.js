@@ -7,6 +7,7 @@ import { userService } from "@/lib/userService";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import UserDisplay from "@/components/community/UserDisplay";
+import GroupCreationModal from "@/components/community/GroupCreationModal";
 
 export default function MessagesPage() {
   const { user } = useAuth();
@@ -15,6 +16,8 @@ export default function MessagesPage() {
   const [loading, setLoading] = useState(true);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [otherUsers, setOtherUsers] = useState({});
+  const [showGroupModal, setShowGroupModal] = useState(false);
+  const [showCreateMenu, setShowCreateMenu] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -33,8 +36,15 @@ export default function MessagesPage() {
         // Load user data for any new conversations
         const userIds = new Set();
         updatedConversations.forEach((conversation) => {
-          const otherUserId = conversation.participants.find((p) => p !== user.uid);
-          if (otherUserId) userIds.add(otherUserId);
+          if (conversation.type === "direct") {
+            const otherUserId = conversation.participants.find((p) => p !== user.uid);
+            if (otherUserId) userIds.add(otherUserId);
+          } else if (conversation.type === "group") {
+            // For groups, load all participant data
+            conversation.participants.forEach(participantId => {
+              if (participantId !== user.uid) userIds.add(participantId);
+            });
+          }
         });
 
         if (userIds.size > 0) {
@@ -63,8 +73,15 @@ export default function MessagesPage() {
 
     const userIds = new Set();
     conversationsList.forEach((conversation) => {
-      const otherUserId = conversation.participants.find((p) => p !== user.uid);
-      if (otherUserId) userIds.add(otherUserId);
+      if (conversation.type === "direct") {
+        const otherUserId = conversation.participants.find((p) => p !== user.uid);
+        if (otherUserId) userIds.add(otherUserId);
+      } else if (conversation.type === "group") {
+        // For groups, load all participant data
+        conversation.participants.forEach(participantId => {
+          if (participantId !== user.uid) userIds.add(participantId);
+        });
+      }
     });
 
     const usersData = await userService.getUsersData(Array.from(userIds));
@@ -89,8 +106,17 @@ export default function MessagesPage() {
   };
 
   const handleConversationClick = (conversation) => {
-    const otherUserId = conversation.participants.find((p) => p !== user.uid);
-    router.push(`/messages/${conversation.id}?with=${otherUserId}`);
+    if (conversation.type === "group") {
+      router.push(`/messages/${conversation.id}?type=group`);
+    } else {
+      const otherUserId = conversation.participants.find((p) => p !== user.uid);
+      router.push(`/messages/${conversation.id}?with=${otherUserId}`);
+    }
+  };
+
+  const handleGroupCreated = (group) => {
+    // Navigate to the new group
+    router.push(`/messages/${group.id}?type=group`);
   };
 
   const startNewConversation = () => {
@@ -130,15 +156,56 @@ export default function MessagesPage() {
               Connect with other community members
             </p>
           </div>
-          <button
-            onClick={startNewConversation}
-            className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-br from-green-500 to-blue-500 text-white rounded-lg hover:from-green-600 hover:to-blue-600 transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            <span>New Message</span>
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowCreateMenu(!showCreateMenu)}
+              className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-br from-green-500 to-blue-500 text-white rounded-lg hover:from-green-600 hover:to-blue-600 transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              <span>New</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {/* Dropdown Menu */}
+            {showCreateMenu && (
+              <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                <button
+                  onClick={() => {
+                    setShowCreateMenu(false);
+                    startNewConversation();
+                  }}
+                  className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3"
+                >
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Direct Message</p>
+                    <p className="text-xs text-gray-500">Message someone directly</p>
+                  </div>
+                </button>
+                <button
+                  onClick={() => {
+                    setShowCreateMenu(false);
+                    setShowGroupModal(true);
+                  }}
+                  className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3 border-t border-gray-100"
+                >
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Create Group</p>
+                    <p className="text-xs text-gray-500">Start a group conversation</p>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Conversations List */}
@@ -176,71 +243,134 @@ export default function MessagesPage() {
           ) : (
             <div className="divide-y divide-gray-200">
               {conversations.map((conversation) => {
-                const otherUserId = conversation.participants.find((p) => p !== user.uid);
-                const otherUser = otherUsers[otherUserId];
                 const unreadCount = conversation.unreadCount?.[user.uid] || 0;
+                const isGroup = conversation.type === "group";
 
-                return (
-                  <div
-                    key={conversation.id}
-                    onClick={() => handleConversationClick(conversation)}
-                    className="p-4 hover:bg-gray-50 cursor-pointer transition-colors"
-                  >
-                    <div className="flex items-center space-x-4">
-                      {/* User Avatar */}
-                      <div className="flex-shrink-0">
-                        <UserDisplay 
-                          userId={otherUserId} 
-                          size="lg" 
-                          showRole={false} 
-                          showVerified={false}
-                        />
-                      </div>
-
-                      {/* Conversation Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <h3 className="text-sm font-medium text-gray-900 truncate">
-                            {otherUser ? 
-                              `${otherUser.firstName || ''} ${otherUser.lastName || ''}`.trim() || 
-                              otherUser.displayName || 
-                              'Unknown User' 
-                              : 'Loading...'}
-                          </h3>
-                          <div className="flex items-center space-x-2">
-                            {unreadCount > 0 && (
-                              <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
-                                {unreadCount > 99 ? '99+' : unreadCount}
-                              </span>
-                            )}
-                            <span className="text-xs text-gray-500">
-                              {formatTimestamp(conversation.lastMessageTime)}
-                            </span>
+                if (isGroup) {
+                  return (
+                    <div
+                      key={conversation.id}
+                      onClick={() => handleConversationClick(conversation)}
+                      className="p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                    >
+                      <div className="flex items-center space-x-4">
+                        {/* Group Avatar */}
+                        <div className="flex-shrink-0">
+                          <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-500 rounded-full flex items-center justify-center">
+                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
                           </div>
                         </div>
-                        
-                        {otherUser && (
-                          <p className="text-xs text-gray-500 mb-1 capitalize">
-                            {otherUser.role?.replace('_', ' ') || 'Community Member'}
-                          </p>
-                        )}
 
-                        {conversation.lastMessage && (
-                          <p className="text-sm text-gray-600 truncate">
-                            {conversation.lastMessage}
+                        {/* Group Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-1">
+                            <h3 className="text-sm font-medium text-gray-900 truncate">
+                              {conversation.name}
+                            </h3>
+                            <div className="flex items-center space-x-2">
+                              {unreadCount > 0 && (
+                                <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
+                                  {unreadCount > 99 ? '99+' : unreadCount}
+                                </span>
+                              )}
+                              <span className="text-xs text-gray-500">
+                                {formatTimestamp(conversation.lastMessageTime)}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <p className="text-xs text-gray-500 mb-1 flex items-center">
+                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            {conversation.memberCount || conversation.participants.length} members
                           </p>
-                        )}
-                      </div>
 
-                      {/* Arrow Icon */}
-                      <div className="flex-shrink-0">
-                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
+                          {conversation.lastMessage && (
+                            <p className="text-sm text-gray-600 truncate">
+                              {conversation.lastMessage}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Arrow Icon */}
+                        <div className="flex-shrink-0">
+                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
+                  );
+                } else {
+                  // Direct message
+                  const otherUserId = conversation.participants.find((p) => p !== user.uid);
+                  const otherUser = otherUsers[otherUserId];
+
+                  return (
+                    <div
+                      key={conversation.id}
+                      onClick={() => handleConversationClick(conversation)}
+                      className="p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                    >
+                      <div className="flex items-center space-x-4">
+                        {/* User Avatar */}
+                        <div className="flex-shrink-0">
+                          <UserDisplay 
+                            userId={otherUserId} 
+                            size="lg" 
+                            showRole={false} 
+                            showVerified={false}
+                          />
+                        </div>
+
+                        {/* Conversation Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-1">
+                            <h3 className="text-sm font-medium text-gray-900 truncate">
+                              {otherUser ? 
+                                `${otherUser.firstName || ''} ${otherUser.lastName || ''}`.trim() || 
+                                otherUser.displayName || 
+                                'Unknown User' 
+                                : 'Loading...'}
+                            </h3>
+                            <div className="flex items-center space-x-2">
+                              {unreadCount > 0 && (
+                                <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
+                                  {unreadCount > 99 ? '99+' : unreadCount}
+                                </span>
+                              )}
+                              <span className="text-xs text-gray-500">
+                                {formatTimestamp(conversation.lastMessageTime)}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          {otherUser && (
+                            <p className="text-xs text-gray-500 mb-1 capitalize">
+                              {otherUser.role?.replace('_', ' ') || 'Community Member'}
+                            </p>
+                          )}
+
+                          {conversation.lastMessage && (
+                            <p className="text-sm text-gray-600 truncate">
+                              {conversation.lastMessage}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Arrow Icon */}
+                        <div className="flex-shrink-0">
+                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
               })}
             </div>
           )}
@@ -270,6 +400,21 @@ export default function MessagesPage() {
       </div>
 
       <Footer />
+
+      {/* Group Creation Modal */}
+      <GroupCreationModal
+        isOpen={showGroupModal}
+        onClose={() => setShowGroupModal(false)}
+        onGroupCreated={handleGroupCreated}
+      />
+
+      {/* Click outside to close dropdown */}
+      {showCreateMenu && (
+        <div
+          className="fixed inset-0 z-5"
+          onClick={() => setShowCreateMenu(false)}
+        />
+      )}
     </div>
   );
 }

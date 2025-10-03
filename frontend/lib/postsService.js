@@ -26,13 +26,8 @@ export const postsService = {
         content: postData.content,
         authorId: postData.authorId,
         tags: postData.tags || [],
-        
-        // NEW: Enhanced fields for media support
-        postType: postData.postType || "text", // "text", "image", "video", "blog", "mixed"
-        media: postData.media || [], // Array of media objects
-        blogData: postData.blogData || null, // Blog-specific data
-        
-        // Existing fields (unchanged)
+        images: postData.images || [],
+        imagePaths: postData.imagePaths || [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         likes: [],
@@ -122,6 +117,10 @@ export const postsService = {
   // Delete post
   async deletePost(postId) {
     try {
+      // Get post data first to access image paths
+      const postDoc = await getDoc(doc(db, "posts", postId));
+      const postData = postDoc.exists() ? postDoc.data() : null;
+
       // Delete all comments for this post first
       const commentsQuery = query(
         collection(db, "comments"),
@@ -134,10 +133,14 @@ export const postsService = {
       );
       await Promise.all(deletePromises);
 
-      // Then delete the post
+      // Delete the post document
       await deleteDoc(doc(db, "posts", postId));
 
-      return { success: true };
+      // Return post data so the caller can handle image cleanup
+      return { 
+        success: true, 
+        imagePaths: postData?.imagePaths || [] 
+      };
     } catch (error) {
       console.error("Error deleting post:", error);
       return { success: false, error: error.message };

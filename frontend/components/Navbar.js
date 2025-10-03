@@ -64,6 +64,34 @@ export default function Navbar() {
               </Link>
             )}
 
+            {/* Broadcast Channels Link - Only show when logged in */}
+            {user && (
+              <Link 
+                href="/broadcast" 
+                className="text-gray-600 hover:text-emerald-600 font-medium transition-colors duration-200 relative group flex items-center space-x-1"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                <span>Broadcast Channels</span>
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-500 group-hover:w-full transition-all duration-300"></span>
+              </Link>
+            )}
+
+            {/* Caregivers Corner Link - Only show for caregivers */}
+            {user?.role === 'caregiver' && (
+              <Link 
+                href="/caregivers-corner" 
+                className="text-gray-600 hover:text-emerald-600 font-medium transition-colors duration-200 relative group flex items-center space-x-1"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+                <span>Caregivers Corner</span>
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-500 group-hover:w-full transition-all duration-300"></span>
+              </Link>
+            )}
+
             {/* Profile Link - Only show when logged in */}
             {user && (
               <Link 
@@ -174,6 +202,30 @@ export default function Navbar() {
                       </svg>
                       <span className="text-sm">AI Assistant</span>
                     </Link>
+
+                    <Link 
+                      href="/broadcast"
+                      className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      <span className="text-sm">Broadcast Channels</span>
+                    </Link>
+
+                    {user.role === 'caregiver' && (
+                      <Link 
+                        href="/caregivers-corner"
+                        className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
+                        onClick={() => setIsProfileMenuOpen(false)}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                        <span className="text-sm">Caregivers Corner</span>
+                      </Link>
+                    )}
 
                     {user.role === 'admin' && (
                       <Link 
@@ -311,6 +363,30 @@ export default function Navbar() {
                       </svg>
                       <span>AI Assistant</span>
                     </Link>
+
+                    <Link 
+                      href="/broadcast" 
+                      className="flex items-center space-x-3 px-3 py-3 text-gray-700 hover:text-emerald-600 font-medium transition-colors rounded-lg hover:bg-emerald-50"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      <span>Broadcast Channels</span>
+                    </Link>
+
+                    {user.role === 'caregiver' && (
+                      <Link 
+                        href="/caregivers-corner" 
+                        className="flex items-center space-x-3 px-3 py-3 text-gray-700 hover:text-emerald-600 font-medium transition-colors rounded-lg hover:bg-emerald-50"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                        <span>Caregivers Corner</span>
+                      </Link>
+                    )}
                     
                     <Link 
                       href="/profile" 

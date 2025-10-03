@@ -4,6 +4,8 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { messagingService } from "@/lib/messagingService";
 import { userService } from "@/lib/userService";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import UserDisplay from "@/components/community/UserDisplay";
@@ -20,12 +22,16 @@ export default function ConversationPage() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [conversation, setConversation] = useState(null);
+  const [groupMembers, setGroupMembers] = useState({});
+  const [showGroupSettings, setShowGroupSettings] = useState(false);
   
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   
   const conversationId = params.conversationId;
   const otherUserId = searchParams.get("with");
+  const conversationType = searchParams.get("type");
+  const isGroup = conversationType === "group";
 
   useEffect(() => {
     if (!user) {
@@ -33,7 +39,7 @@ export default function ConversationPage() {
       return;
     }
 
-    if (conversationId && otherUserId) {
+    if (conversationId && (otherUserId || isGroup)) {
       loadConversationData();
       loadMessages();
       
@@ -58,11 +64,31 @@ export default function ConversationPage() {
   }, [messages]);
 
   const loadConversationData = async () => {
-    if (!otherUserId) return;
+    try {
+      // Get conversation data
+      const conversationRef = doc(db, "conversations", conversationId);
+      const conversationDoc = await getDoc(conversationRef);
+      
+      if (conversationDoc.exists()) {
+        const conversationData = { id: conversationDoc.id, ...conversationDoc.data() };
+        setConversation(conversationData);
 
-    // Load other user data
-    const userData = await userService.getUserData(otherUserId);
-    setOtherUser(userData);
+        if (isGroup) {
+          // Load all group member data
+          const memberIds = conversationData.participants.filter(id => id !== user.uid);
+          if (memberIds.length > 0) {
+            const membersData = await userService.getUsersData(memberIds);
+            setGroupMembers(membersData);
+          }
+        } else if (otherUserId) {
+          // Load other user data for direct message
+          const userData = await userService.getUserData(otherUserId);
+          setOtherUser(userData);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading conversation data:", error);
+    }
   };
 
   const loadMessages = async () => {
@@ -176,7 +202,27 @@ export default function ConversationPage() {
                 </svg>
               </button>
               
-              {otherUser && (
+              {isGroup && conversation ? (
+                <>
+                  {/* Group Avatar */}
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-500 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      {conversation.name}
+                    </h2>
+                    <p className="text-sm text-gray-500 flex items-center">
+                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      {conversation.memberCount || conversation.participants?.length || 0} members
+                    </p>
+                  </div>
+                </>
+              ) : otherUser ? (
                 <>
                   <UserDisplay 
                     userId={otherUserId} 
@@ -193,15 +239,24 @@ export default function ConversationPage() {
                     </p>
                   </div>
                 </>
-              )}
+              ) : null}
             </div>
 
-            <button
-              onClick={() => router.push(`/profile/${otherUserId}`)}
-              className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              View Profile
-            </button>
+            {isGroup ? (
+              <button
+                onClick={() => setShowGroupSettings(true)}
+                className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Group Info
+              </button>
+            ) : (
+              <button
+                onClick={() => router.push(`/profile/${otherUserId}`)}
+                className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                View Profile
+              </button>
+            )}
           </div>
         </div>
 
@@ -217,7 +272,10 @@ export default function ConversationPage() {
                   </svg>
                 </div>
                 <p className="text-gray-500 text-sm">
-                  Start your conversation with {otherUser?.firstName}
+                  {isGroup 
+                    ? `Welcome to ${conversation?.name || 'the group'}! Start the conversation.`
+                    : `Start your conversation with ${otherUser?.firstName || 'this user'}`
+                  }
                 </p>
               </div>
             ) : (
@@ -271,7 +329,10 @@ export default function ConversationPage() {
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder={`Message ${otherUser?.firstName || 'user'}...`}
+                placeholder={isGroup 
+                  ? `Message ${conversation?.name || 'group'}...`
+                  : `Message ${otherUser?.firstName || 'user'}...`
+                }
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-gray-900"
                 rows="1"
                 style={{ minHeight: '48px', maxHeight: '120px' }}

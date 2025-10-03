@@ -1,36 +1,136 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# I-Win Healthcare Community Platform
 
-## Getting Started
+A comprehensive healthcare community platform connecting patients, caregivers, and medical professionals.
 
-First, run the development server:
+## 🏗️ Project Structure
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+iwin-main/
+├── frontend/          # Next.js React application
+│   ├── app/          # Next.js 13+ app directory
+│   ├── components/   # React components
+│   ├── lib/         # Utility functions and services
+│   ├── contexts/    # React contexts
+│   ├── public/      # Static assets
+│   └── package.json # Frontend dependencies
+├── backend/          # Express.js API server
+│   ├── routes/      # API routes
+│   ├── middleware/  # Custom middleware
+│   ├── server.js    # Main server file
+│   └── package.json # Backend dependencies
+└── README.md        # This file
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Quick Start
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+### Frontend (Next.js)
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Frontend runs on: http://localhost:3000
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Backend (Express.js)
+```bash
+cd backend
+npm install
+npm run dev
+```
+Backend runs on: http://localhost:5000
 
-## Learn More
+## ✨ Features
 
-To learn more about Next.js, take a look at the following resources:
+- **🔍 Dynamic Search**: Real-time search through posts, comments, and user profiles
+- **💬 Direct Messaging**: Real-time messaging system between community members
+- **👥 User Profiles**: Comprehensive user profiles with role-based features
+- **📱 Community Posts**: Share experiences, ask questions, and engage with others
+- **🏥 Role-Based Access**: Different features for patients, caregivers, and medical professionals
+- **🔐 Authentication**: Secure user authentication with Firebase
+- **📱 Responsive Design**: Works seamlessly on desktop and mobile devices
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🛠️ Tech Stack
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Frontend
+- **Next.js 15** - React framework
+- **React 18** - UI library
+- **Tailwind CSS** - Styling
+- **Firebase** - Authentication & Database
 
-## Deploy on Vercel
+### Backend
+- **Express.js** - Web framework
+- **Firebase Admin** - Server-side Firebase integration
+- **CORS** - Cross-origin resource sharing
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📦 Installation
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **Clone the repository**
+```bash
+git clone <repository-url>
+cd iwin-main
+```
+
+2. **Install Frontend Dependencies**
+```bash
+cd frontend
+npm install
+```
+
+3. **Install Backend Dependencies**
+```bash
+cd ../backend
+npm install
+```
+
+4. **Configure Environment Variables**
+- Copy `.env.example` to `.env` in both frontend and backend directories
+- Configure your Firebase and other environment variables
+
+5. **Start Development Servers**
+
+Frontend:
+```bash
+cd frontend
+npm run dev
+```
+
+Backend:
+```bash
+cd backend
+npm run dev
+```
+
+## 🌟 Key Features Implemented
+
+### Search Functionality
+- Real-time search across posts, comments, and user profiles
+- Categorized search results with highlighting
+- Debounced search for optimal performance
+
+### Messaging System
+- Real-time direct messaging between users
+- Conversation management with unread counts
+- Message history and timestamps
+- User-friendly chat interface
+
+### User Profiles
+- Dynamic user profile pages
+- Profile navigation from search results
+- Role-based profile information
+- Message button integration
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+## 🆘 Support
+
+For support and questions, please contact the development team.
