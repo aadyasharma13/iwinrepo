@@ -1,8 +1,9 @@
 {
+  "/favicon.ico/route": "app/favicon.ico/route.js",
   "/_not-found/page": "app/_not-found/page.js",
-  "/messages/page": "app/messages/page.js",
-  "/broadcast/page": "app/broadcast/page.js",
-  "/auth/page": "app/auth/page.js",
   "/chatbot/page": "app/chatbot/page.js",
-  "/caregivers-corner/page": "app/caregivers-corner/page.js"
+  "/page": "app/page.js",
+  "/auth/page": "app/auth/page.js",
+  "/profile/page": "app/profile/page.js",
+  "/community/page": "app/community/page.js"
 }
